@@ -20,3 +20,10 @@ Thumbs.db
 .idea/
 .ipynb_checkpoints/
 
+# CatBoost Training Telemetry
+catboost_info/
+
+# Logs
+*.log
+
+

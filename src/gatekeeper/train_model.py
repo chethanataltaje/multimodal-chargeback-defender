@@ -27,11 +27,12 @@ def train_gatekeeper():
     # 4. Initialize and Train CatBoost
     print("Training CatBoost Classifier...")
     model = CatBoostClassifier(
-        iterations=200,
+        iterations=300, # Increased slightly for the 25k dataset
         learning_rate=0.1,
         depth=4,
         cat_features=cat_features,
         eval_metric='AUC',
+        auto_class_weights='Balanced', # CRITICAL: Handles the 87/13 imbalance
         verbose=50,
         random_seed=42
     )
