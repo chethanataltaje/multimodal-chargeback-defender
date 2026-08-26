@@ -68,8 +68,8 @@ class VisionSpecialist:
         # Tier 1: Google Gemini Models in Priority Order
         if self.gemini_api_key:
             candidate_models = [
-                os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-                "gemini-2.0-flash",
+                os.getenv("GEMINI_MODEL", "gemini-3.6-flash"),
+                "gemini-2.5-flash",
                 "gemini-1.5-flash"
             ]
             for model_name in candidate_models:
