@@ -23,7 +23,11 @@ Thumbs.db
 # CatBoost Training Telemetry
 catboost_info/
 
-# Logs
+# Logs & Temp Uploads
 *.log
+data/uploads/
+test_keys.py
+scratch/
 
-
+# Local Design Reference
+DESIGN.md

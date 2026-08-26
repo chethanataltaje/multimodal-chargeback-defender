@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rebuttal — Automated defense, backed by proof, not persuasion | Razorpay Buildathon 2026</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- TOP INSTITUTIONAL NAVIGATION (DESIGN.md) -->
+  <nav class="top-nav-bar">
+    <div class="nav-inner">
+      <div class="brand-block">
+        <div class="brand-icon">
+          <!-- Sleek Geometric R Emblem (SVG) -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 4H14C16.7614 4 19 6.23858 19 9C19 11.7614 16.7614 14 14 14H6V4Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 14L6 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M13 14L19 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">REBUTTAL</div>
+          <div class="brand-tagline">Automated defense, backed by proof, not persuasion. • Razorpay Buildathon 2026</div>
+        </div>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab-btn active" onclick="switchTab('tab-investigation')">Dispute Intake & Forensics</button>
+        <button class="nav-tab-btn" onclick="switchTab('tab-threshold')">Risk Policy & Cost Matrix</button>
+        <button class="nav-tab-btn" onclick="switchTab('tab-queue')">Analyst Review Queue</button>
+      </div>
+
+      <div class="nav-meta">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>RAZORPAY CE 3.0 ACTIVE</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ====================================================================
+       TAB 1: DISPUTE INTAKE & AUTONOMOUS DEFENSE
+       ==================================================================== -->
+  <section id="tab-investigation">
+    
+    <!-- Hero & Institutional Trust Stats Row -->
+    <div class="hero-header">
+      <div class="hero-title-row">
+        <div>
+          <h1 class="hero-main-title">Automated Defense, Backed by Proof, Not Persuasion</h1>
+          <p class="hero-subtitle">Rebuttal cross-references visual evidence against customer claims, gating Razorpay CE 3.0 dispute actions behind calibrated CatBoost statistical proof.</p>
+        </div>
+      </div>
+
+      <div class="stats-bar-grid">
+        <div class="stat-metric-card">
+          <div class="stat-metric-num">0.9529</div>
+          <div class="stat-metric-label">CatBoost Gatekeeper ROC-AUC</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-num">0.0579</div>
+          <div class="stat-metric-label">Brier Calibration Score (< 0.10)</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-num">₹4.31M</div>
+          <div class="stat-metric-label">Net Recovery at 0.85 Threshold</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-num">Defense-Only</div>
+          <div class="stat-metric-label">Zero User Chatbots / Strict Financial Guardrails</div>
+        </div>
+      </div>
+
+      <!-- Scenario Selector Strip -->
+      <div class="scenario-strip" id="scenario-selector">
+        <div class="scenario-card active" onclick="loadScenario('scenario-1')">
+          <div class="scenario-tag">Scenario 01 // Auto-Contest</div>
+          <div class="scenario-title">Friendly Fraud</div>
+          <div class="scenario-desc">₹1,19,900 iPhone • Shattered Claim vs Intact Photo</div>
+        </div>
+        <div class="scenario-card" onclick="loadScenario('scenario-2')">
+          <div class="scenario-tag">Scenario 02 // Priority Triage</div>
+          <div class="scenario-title">Borderline Dispute</div>
+          <div class="scenario-desc">₹14,999 Sneakers • Ambiguous Dark Evidence</div>
+        </div>
+        <div class="scenario-card" onclick="loadScenario('scenario-3')">
+          <div class="scenario-tag">Scenario 03 // Concede Liability</div>
+          <div class="scenario-title">Hardware Defect</div>
+          <div class="scenario-desc">₹4,999 Headphones • Genuine Physical Damage</div>
+        </div>
+        <div class="scenario-card" id="card-custom-upload" onclick="enableCustomUploadMode()">
+          <div class="scenario-tag" style="color: var(--color-signal-orange);">Custom Live Test</div>
+          <div class="scenario-title">+ Upload Real File</div>
+          <div class="scenario-desc">Test with your own photo & claim text</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 50/50 Workspace Grid -->
+    <div class="workspace-grid">
+      
+      <!-- Left Column: Case Intake & Forensics -->
+      <div class="content-card">
+        <div class="card-header-bar">
+          <div>
+            <div class="card-heading">Dispute Intake & Evidence Ingestion</div>
+            <div class="card-subheading">Inbound chargeback notice from card issuing bank</div>
+          </div>
+          <span class="status-pill" style="font-size: 10px;">WEBHOOK INGESTED</span>
+        </div>
+
+        <!-- Custom Image Drag & Drop Area -->
+        <div class="dropzone-container" id="dropzone" onclick="document.getElementById('custom-file-input').click()">
+          <div class="dropzone-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-indigo-navy);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          </div>
+          <div class="dropzone-title">Customer Photographic Evidence</div>
+          <div class="dropzone-hint">Click or drag image to test (Extracts real camera EXIF metadata)</div>
+          <input type="file" id="custom-file-input" accept="image/*" style="display: none;" onchange="handleFileSelected(event)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Transaction Reference ID (Razorpay format)</label>
+          <input type="text" id="inp-tx-id" class="form-input" value="pay_98a76b54c3210f">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Customer Dispute Claim (Transcribed from Bank Notice / Support Chat)</label>
+          <textarea id="inp-claim-text" class="form-textarea">The phone screen arrived completely shattered in pieces and unusable.</textarea>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Transaction Amount (₹ INR)</label>
+            <input type="number" id="inp-amount" class="form-input" value="119900.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dispute Reason Code</label>
+            <select id="inp-reason" class="form-select">
+              <option value="damaged">damaged</option>
+              <option value="not_received">not_received</option>
+              <option value="fraud">fraud</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section: Auto-Populated CRM Telemetry -->
+        <div style="background: var(--color-cloud-canvas); border: 1px solid var(--color-silver-lining); border-radius: 6px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--color-indigo-navy); text-transform: uppercase; letter-spacing: 0.04em;">Customer Risk Profile (Auto-Populated from Merchant CRM)</span>
+            <span class="status-pill" style="font-size: 9px; padding: 2px 6px;">CRM SYNCED</span>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 11px;">Merchant Category</label>
+              <select id="inp-category" class="form-select" style="background: #fff; font-size: 12px;">
+                <option value="electronics">electronics</option>
+                <option value="apparel">apparel</option>
+                <option value="digital_services">digital_services</option>
+                <option value="food_delivery">food_delivery</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 11px;">User Account Age (Days)</label>
+              <input type="number" id="inp-age" class="form-input" style="background: #fff; font-size: 12px;" value="5">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 11px;">Prior Chargeback History (Past 12 Months)</label>
+            <input type="number" id="inp-prior-cb" class="form-input" style="background: #fff; font-size: 12px;" value="4">
+          </div>
+        </div>
+
+        <div class="evidence-preview-wrap">
+          <div class="form-label" style="text-align: left; margin-bottom: 8px;">Active Photographic Evidence</div>
+          <img id="evidence-img" class="evidence-img-preview" src="/data/test_samples/intact_phone.jpg" alt="Evidence Preview">
+          <span id="evidence-caption" style="font-size: 11px; color: var(--color-steel); font-family: var(--font-mono);">data/test_samples/intact_phone.jpg</span>
+        </div>
+
+        <button class="btn-accent-orange" id="btn-run-agent" onclick="executeDefensePipeline()">
+          <span>Execute Evidence Pipeline</span>
+        </button>
+      </div>
+
+      <!-- Right Column: Decision Engine & Razorpay CE 3.0 -->
+      <div>
+        
+        <!-- Decision Status Banner Card -->
+        <div class="decision-status-card auto-contest" id="decision-banner">
+          <div>
+            <div class="decision-status-label" id="decision-tier-label">ROUTING TIER: AUTO-CONTEST (SCORE > 85%)</div>
+            <div class="decision-status-heading" id="decision-action-label">SUBMITTED TO RAZORPAY API</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="decision-status-label">Win Probability</div>
+            <div class="win-prob-metric" id="decision-prob-value">99.1%</div>
+          </div>
+        </div>
+
+        <!-- Layer 1 Forensics Box -->
+        <div class="forensics-box">
+          <div class="card-header-bar" style="border-bottom: none; margin-bottom: 8px; padding-bottom: 0;">
+            <div class="card-heading" style="font-size: 14px;">Layer 1 // Multimodal Forensic Analysis</div>
+            <span style="font-size: 11px; font-family: var(--font-mono); color: var(--color-steel);">GEMINI 3.6 FLASH</span>
+          </div>
+
+          <div class="forensics-meta-grid">
+            <div class="forensics-meta-item">
+              <div class="forensics-meta-lbl">Visual Contradiction</div>
+              <div class="forensics-meta-val" id="stat-vlm-contradiction" style="color: #dc2626;">TRUE (CONTRADICTION DETECTED)</div>
+            </div>
+            <div class="forensics-meta-item">
+              <div class="forensics-meta-lbl">EXIF Telemetry</div>
+              <div class="forensics-meta-val" id="stat-exif-match">FALSE (EXIF STRIPPED)</div>
+            </div>
+          </div>
+
+          <div class="forensics-rationale-bubble">
+            <strong style="font-size: 11px; text-transform: uppercase; color: var(--color-steel); display: block; margin-bottom: 4px;">VLM Forensic Rationale:</strong>
+            <p id="stat-vlm-rationale" style="color: var(--color-indigo-navy); font-weight: 500;">
+              The provided image shows a fully intact screen with no cracks or visual damage, directly contradicting the customer's claim that it arrived shattered.
+            </p>
+          </div>
+        </div>
+
+        <!-- Layer 2 Explainable AI (XAI) SHAP Feature Impacts -->
+        <div class="shap-drivers-box">
+          <div class="card-header-bar" style="border-bottom: none; margin-bottom: 8px; padding-bottom: 0;">
+            <div>
+              <div class="card-heading" style="font-size: 14px;">Layer 2 // CatBoost Explainable AI (XAI) Drivers</div>
+              <div style="font-size: 11px; color: var(--color-steel); margin-top: 2px;">Feature-level attribution for calibrated win probability</div>
+            </div>
+            <span style="font-size: 11px; font-family: var(--font-mono); color: var(--color-steel);">SHAP TREE-EXPLAINER</span>
+          </div>
+          <div id="shap-drivers-list" style="margin-top: 8px;">
+            <!-- Populated dynamically with human-readable cards and impact bars -->
+          </div>
+        </div>
+
+        <!-- Layer 3 Action Strategy & Razorpay CE 3.0 Package -->
+        <div class="content-card" style="padding: 20px; margin-bottom: 20px;">
+          <div class="card-header-bar" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+            <div>
+              <div class="card-heading" style="font-size: 14px;">Layer 3 // Action Strategy & Unit Economics</div>
+              <div style="font-size: 11px; color: var(--color-steel);" id="action-strategy-subtitle">Financial rationale and CE 3.0 submission details</div>
+            </div>
+          </div>
+
+          <!-- Plain-English Financial Strategy Summary Box -->
+          <div id="strategy-explanation-box" style="background: var(--color-cloud-canvas); border: 1px solid var(--color-silver-lining); border-radius: var(--radius-cards); padding: 16px; margin-bottom: 16px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- CE 3.0 JSON Code Box (Collapsible / Viewable) -->
+          <div class="code-block-wrap">
+            <div class="code-header-bar">
+              <span class="code-title">Razorpay CE 3.0 Submission Payload</span>
+              <button class="btn-copy-code" id="copy-payload-btn" onclick="copyPayload()">Copy JSON</button>
+            </div>
+            <pre class="code-content" id="payload-code-box">Loading submission payload...</pre>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       TAB 2: RISK POLICY & THRESHOLD COST MATRIX
+       ==================================================================== -->
+  <section id="tab-threshold" class="hidden-section">
+    <div class="matrix-container" style="padding-top: 32px;">
+      <div class="hero-title-row">
+        <div>
+          <h1 class="hero-main-title">Risk Policy & Quantitative Threshold Justification</h1>
+          <p class="hero-subtitle">Mathematical proof for the 0.85 auto-contest threshold derived from the asymmetric dispute penalty matrix.</p>
+        </div>
+      </div>
+
+      <div class="content-card" style="margin-top: 24px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--color-indigo-navy); margin-bottom: 8px;">The Asymmetric Financial Risk Problem</h3>
+        <p style="color: var(--color-slate-ink); line-height: 1.7; font-size: 13px;">
+          Contesting an illegitimate chargeback carries an asymmetric financial penalty:
+          <strong>A lost dispute incurs a non-refundable ₹1,500 card network penalty fee</strong> in addition to the lost merchandise value.
+          Conversely, manual human review incurs a labor triage cost of ~₹200.
+          The empirical table below demonstrates that setting the automated submission threshold at <strong>0.85</strong> maximizes net recovered merchant capital while keeping false-positive dispute loss fees below 5%.
+        </p>
+
+        <table class="matrix-table" id="cost-matrix-table">
+          <thead>
+            <tr>
+              <th>Threshold</th>
+              <th>Auto-Contest Volume</th>
+              <th>Precision (Win Rate)</th>
+              <th>False Positives (Lost Fees)</th>
+              <th>Net Financial Impact (₹ INR)</th>
+              <th>Policy Status</th>
+            </tr>
+          </thead>
+          <tbody id="cost-matrix-tbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       TAB 3: HUMAN-IN-THE-LOOP ANALYST QUEUE
+       ==================================================================== -->
+  <section id="tab-queue" class="hidden-section">
+    <div class="matrix-container" style="padding-top: 32px;">
+      <div class="hero-title-row">
+        <div>
+          <h1 class="hero-main-title">Priority Analyst Review Queue</h1>
+          <p class="hero-subtitle">Human-in-the-loop triage inbox for borderline disputes (60% – 85% confidence band).</p>
+        </div>
+      </div>
+
+      <div class="queue-table-wrap">
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Dispute ID</th>
+              <th>Transaction ID</th>
+              <th>Amount</th>
+              <th>Reason</th>
+              <th>Win Probability</th>
+              <th>VLM Status</th>
+              <th>EXIF Metadata</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="analyst-queue-tbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div>REBUTTAL // RAZORPAY BUILDATHON 2026</div>
+      <div>TRACK 02: AI RISK MANAGER • AUTOMATED DEFENSE, BACKED BY PROOF, NOT PERSUASION.</div>
+      <div>OFFICIAL RAZORPAY PYTHON SDK INTEGRATED</div>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

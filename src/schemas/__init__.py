@@ -1,10 +1,9 @@
 from pydantic import BaseModel, Field
+from typing import List, Optional
 
 class VisionAssessment(BaseModel):
     """
-
-    Forces the model to quantify its confidence and allows a fallback 
-    if the image is too poor to evaluate (preventing false positives).
+    Schema for VLM contradiction reasoning.
     """
     contradiction_found: bool = Field(
         description="True if the visual evidence clearly contradicts the user's text claim."
@@ -21,17 +20,24 @@ class VisionAssessment(BaseModel):
 
 class RazorpayEvidencePayload(BaseModel):
     """
-    Maps directly to Razorpay's CE 3.0 API specifications for dispute contestation.
+    Maps directly to Razorpay's CE 3.0 / dispute contest API specifications.
     """
-    shipping_proof: list[str] = Field(
-        description="Array of document IDs proving shipping/location (e.g., GPS metadata logs)."
+    shipping_proof: List[str] = Field(
+        default_factory=list,
+        description="Array of document IDs or metadata strings proving delivery/location (e.g. GPS metadata logs)."
     )
-    billing_proof: list[str] = Field(
+    billing_proof: List[str] = Field(
+        default_factory=list,
         description="Array of document IDs proving billing or order confirmation."
     )
-    customer_communication: list[str] = Field(
-        description="Array of document IDs containing chat transcripts and VLM rationales."
+    customer_communication: List[str] = Field(
+        default_factory=list,
+        description="Array of document IDs or text logs containing chat transcripts and VLM rationales."
+    )
+    explanation: Optional[str] = Field(
+        default="",
+        description="Summary explanation for the dispute contestation submission."
     )
 
 # Re-export data models for project-wide convenience
-from .data_models import PerceptionResult, AgentState, VLMAnalysis
+from .data_models import PerceptionResult, AgentState, VLMAnalysis, SHAPDriver
