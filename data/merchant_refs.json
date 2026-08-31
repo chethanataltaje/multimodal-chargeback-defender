@@ -1,0 +1,20 @@
+{
+  "DIS_DEMO_001": {
+    "delivery_timestamp": "2023-08-01T10:30:00",
+    "delivery_latitude": 12.9716,
+    "delivery_longitude": 77.5946,
+    "location_label": "Demo Store A (synthetic)"
+  },
+  "DIS_DEMO_002": {
+    "delivery_timestamp": "2023-08-02T14:45:00",
+    "delivery_latitude": 37.7749,
+    "delivery_longitude": -122.4194,
+    "location_label": "Demo Store B (synthetic)"
+  },
+  "DIS_DEMO_003": {
+    "delivery_timestamp": "2023-08-03T09:15:00",
+    "delivery_latitude": 51.5074,
+    "delivery_longitude": -0.1278,
+    "location_label": "Demo Store C (synthetic)"
+  }
+}

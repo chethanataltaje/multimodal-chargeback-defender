@@ -25,8 +25,10 @@ class PerceptionResult(BaseModel):
     insufficient_evidence: bool = False
     metadata_match: bool
     metadata_available: bool = False
+    camera_device: Optional[str] = None
     gps_coordinates: Optional[str] = None
     capture_timestamp: Optional[str] = None
+    exif_note: Optional[str] = None
     vision_reasoning: str
 
 
@@ -34,6 +36,9 @@ class SHAPDriver(BaseModel):
     """Explains a single feature's contribution to the win probability."""
     feature: str
     impact: float
+    
+    
+
 
 
 class AgentState(BaseModel):
@@ -61,4 +66,13 @@ class AgentState(BaseModel):
     routing_tier: Optional[str] = None  # 'AUTO_CONTEST', 'PRIORITY_REVIEW', 'STANDARD_REVIEW'
     final_action: Optional[str] = None
     action_details: Optional[Dict[str, Any]] = None
+    # Telemetry fields
+    exif: Optional[Dict[str, Any]] = None
+    merchant_reference: Optional[Dict[str, Any]] = None
+    gps_correlation: Optional[str] = None
+    gps_distance_meters: Optional[float] = None
+    gps_match_tolerance_meters: int = 500
+    timestamp_correlation: Optional[str] = None
+    timestamp_difference_minutes: Optional[int] = None
+    timestamp_tolerance_minutes: int = 120
     audit_trail: List[str] = Field(default_factory=list)

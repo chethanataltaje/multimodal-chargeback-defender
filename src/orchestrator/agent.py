@@ -10,7 +10,99 @@ from src.orchestrator.razorpay_client import razorpay_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("OrchestratorAgent")
+import json
+from datetime import datetime, timezone
+from math import radians, sin, cos, sqrt, atan2
+import os
 
+# Load merchant reference data (demo)
+MERCHANT_REFS = {}
+_refs_path = os.path.join(os.path.dirname(__file__), "..", "..", "merchant_refs.json")
+if os.path.exists(_refs_path):
+    try:
+        MERCHANT_REFS = json.load(open(_refs_path, "r", encoding="utf-8"))
+    except Exception as e:
+        logger.error(f"Failed to load merchant_refs.json: {e}")
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate Haversine distance in meters between two lat/lon points."""
+    R = 6371000  # Earth radius in meters
+    phi1, phi2 = radians(lat1), radians(lat2)
+    dphi = radians(lat2 - lat1)
+    dlambda = radians(lon2 - lon1)
+    a = sin(dphi / 2) ** 2 + cos(phi1) * cos(phi2) * sin(dlambda / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c
+
+def compare_gps(state: AgentState) -> dict:
+    exif = state.perception_result
+    gps = exif.gps_coordinates if exif else None
+    ref_key = None
+    for k in MERCHANT_REFS.keys():
+        if state.transaction_id in k or k in state.transaction_id:
+            ref_key = k
+            break
+    if not ref_key:
+        ref_key = next(iter(MERCHANT_REFS), None)
+    merchant = MERCHANT_REFS.get(ref_key, {})
+    result = {"merchant_reference": merchant, "gps_correlation": "NOT_VERIFIABLE", "gps_distance_meters": None}
+    if gps and gps.get("latitude") is not None and gps.get("longitude") is not None:
+        lat2 = merchant.get("delivery_latitude")
+        lon2 = merchant.get("delivery_longitude")
+        if lat2 is not None and lon2 is not None:
+            dist = haversine_distance(gps["latitude"], gps["longitude"], lat2, lon2)
+            result["gps_distance_meters"] = round(dist, 2)
+            if dist <= state.gps_match_tolerance_meters:
+                result["gps_correlation"] = "MATCH"
+            else:
+                result["gps_correlation"] = "MISMATCH"
+        else:
+            result["gps_correlation"] = "NOT_VERIFIABLE"
+    else:
+        result["gps_correlation"] = "NOT_VERIFIABLE"
+    return result
+
+def compare_timestamp(state: AgentState) -> dict:
+    exif = state.perception_result
+    ts = exif.capture_timestamp if exif else None
+    ref_key = None
+    for k in MERCHANT_REFS.keys():
+        if state.transaction_id in k or k in state.transaction_id:
+            ref_key = k
+            break
+    if not ref_key:
+        ref_key = next(iter(MERCHANT_REFS), None)
+    merchant = MERCHANT_REFS.get(ref_key, {})
+    result = {"timestamp_correlation": "NOT_VERIFIABLE", "timestamp_difference_minutes": None}
+    if ts:
+        try:
+            ts_clean = ts.replace(" ", "T").replace("_", "-")
+            exif_dt = datetime.fromisoformat(ts_clean)
+        except Exception:
+            try:
+                exif_dt = datetime.strptime(ts, "%Y:%m:%d %H:%M:%S")
+            except Exception:
+                exif_dt = None
+        delivery_ts = merchant.get("delivery_timestamp")
+        if exif_dt and delivery_ts:
+            try:
+                delivery_dt = datetime.fromisoformat(delivery_ts)
+            except Exception:
+                delivery_dt = None
+            if delivery_dt:
+                diff = abs((exif_dt - delivery_dt).total_seconds() / 60)
+                result["timestamp_difference_minutes"] = int(diff)
+                if diff <= state.timestamp_tolerance_minutes:
+                    result["timestamp_correlation"] = "MATCH"
+                else:
+                    result["timestamp_correlation"] = "MISMATCH"
+            else:
+                result["timestamp_correlation"] = "NOT_VERIFIABLE"
+        else:
+            result["timestamp_correlation"] = "NOT_VERIFIABLE"
+    else:
+        result["timestamp_correlation"] = "NOT_VERIFIABLE"
+    return result
 
 def perception_node(state: AgentState) -> Dict[str, Any]:
     """
@@ -34,8 +126,10 @@ def perception_node(state: AgentState) -> Dict[str, Any]:
         insufficient_evidence=vlm_data.get("insufficient_evidence", False),
         metadata_match=exif_data.get("metadata_match", False),
         metadata_available=exif_data.get("metadata_available", False),
+        camera_device=exif_data.get("camera_device"),
         gps_coordinates=exif_data.get("gps_coordinates"),
         capture_timestamp=exif_data.get("capture_timestamp"),
+        exif_note=exif_data.get("exif_note"),
         vision_reasoning=vlm_data.get("rationale", "")
     )
     
@@ -44,10 +138,19 @@ def perception_node(state: AgentState) -> Dict[str, Any]:
         f"Confidence={perception_result.vision_confidence_score:.2f}, "
         f"EXIF Match={perception_result.metadata_match}"
     )
+    # Compute telemetry comparisons
+    gps_info = compare_gps(state)
+    ts_info = compare_timestamp(state)
     
     return {
         "perception_result": perception_result,
-        "audit_trail": state.audit_trail + [log_entry]
+        "audit_trail": state.audit_trail + [log_entry],
+        # Telemetry fields
+        "merchant_reference": gps_info.get("merchant_reference"),
+        "gps_correlation": gps_info.get("gps_correlation"),
+        "gps_distance_meters": gps_info.get("gps_distance_meters"),
+        "timestamp_correlation": ts_info.get("timestamp_correlation"),
+        "timestamp_difference_minutes": ts_info.get("timestamp_difference_minutes")
     }
 
 

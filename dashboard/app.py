@@ -240,7 +240,7 @@ with tabs[0]:
 # -------------------------------------------------------------
 with tabs[1]:
     st.subheader("Quantitative Justification for the 0.85 Auto-Contest Threshold")
-    st.markdown("""
+    st.markdown(r"""
     Auto-contesting disputes is an **asymmetric financial risk problem**:
     - Contesting and **losing** incurs a **₹1,500 non-refundable chargeback penalty fee** from card networks/Razorpay.
     - Manually **reviewing** via a human analyst incurs a triage cost of **~₹200**.

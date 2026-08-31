@@ -9,9 +9,11 @@
 *Autonomous Multimodal Dispute Forensics & Razorpay CE 3.0 Automation*
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-1C3C3C)](https://www.langchain.com/langgraph)
-[![CatBoost](https://img.shields.io/badge/ML-CatBoost-FFCC00)](https://catboost.ai/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![CatBoost](https://img.shields.io/badge/ML-CatBoost-FFCC00)](https://catboost.ai/)
+[![Gemini](https://img.shields.io/badge/VLM-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
+[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-1C3C3C)](https://www.langchain.com/langgraph)
+[![Razorpay](https://img.shields.io/badge/API-Razorpay%20CE%203.0-0C2340?logo=razorpay&logoColor=white)](https://razorpay.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 
 </div>
@@ -20,7 +22,7 @@
 
 > **"Rebuttal doesn't talk your customer out of a dispute. It proves them wrong."**
 >
-> Rebuttal gates every chargeback contestation behind multimodal vision forensics, EXIF camera telemetry, and a calibrated CatBoost statistical gate — protecting merchant margins from non-refundable dispute-loss penalty fees without a single user-facing persuasion tactic.
+> Rebuttal gates every chargeback contestation behind multimodal visual forensics, real EXIF/GPS telemetry validation against merchant delivery logs, and a calibrated CatBoost statistical gate — protecting merchant margins from non-refundable dispute-loss penalty fees without a single user-facing persuasion tactic.
 
 ---
 
@@ -29,12 +31,14 @@
 - [The Problem](#the-problem)
 - [The Solution](#the-solution)
 - [System Architecture](#system-architecture)
-- [Threshold Justification](#quantitative-justification-for-the-085-auto-contest-threshold)
+- [Two-Role Platform Architecture](#two-role-platform-architecture)
+- [Forensic & Telemetry Honesty](#forensic--telemetry-honesty)
+- [Quantitative 0.85 Threshold Justification](#quantitative-justification-for-the-085-auto-contest-threshold)
 - [Tech Stack](#tech-stack)
-- [Quickstart](#quickstart--launch)
+- [Quickstart & Setup](#quickstart--setup)
+- [Key API Endpoints](#key-api-endpoints)
 - [Project Structure](#project-structure)
 - [Limitations & Disclosures](#limitations--disclosures)
-- [Roadmap](#roadmap)
 
 ---
 
@@ -45,21 +49,25 @@ Friendly fraud — customers falsely claiming an item was never received, or arr
 | Outcome | Financial Impact |
 |---|---|
 | **Win the dispute** | Recovers transaction capital (₹15,000 – ₹1,20,000+) |
-| **Lose the dispute** | Loses transaction amount **+ a non-refundable dispute-loss penalty fee (≈₹1,500/case)** |
+| **Lose the dispute** | Loses transaction amount **+ a non-refundable dispute penalty fee (₹1,500/case)** |
 
-Most hackathon and even commercial approaches to this problem either (a) build user-facing chatbots that try to talk customers out of disputes — a compliance risk — or (b) use a single LLM to guess fraud likelihood, which hallucinates and cannot be trusted to fire financial API calls unsupervised.
+Most approaches either build user-facing chatbots that try to talk customers out of disputes (a major compliance violation) or rely on a single LLM to guess fraud, which hallucinates and cannot be trusted with financial APIs.
 
-**Rebuttal takes neither approach.** It is a defense-only, back-office risk engine that never talks to the customer — it only acts on evidence, and only when statistically confident.
+**Rebuttal takes an evidence-first, back-office approach.** It is an enterprise dispute operations platform that acts strictly on verifiable data and calibrated statistical confidence.
 
 ---
 
 ## The Solution
 
-Rebuttal is an autonomous system that:
-
-1. **Cross-references** customer claims against photographic evidence and EXIF telemetry via a dual-tier vision-language model council (**Google Gemini 3.6 Flash / 2.5 Flash** + Groq Vision).
-2. **Gates** every automated action behind a calibrated CatBoost probability classifier (ROC-AUC `0.9529`, Brier Score `0.0579`) — nothing fires on a guess.
-3. **Formats** CE 3.0–compliant evidence arrays and auto-contests eligible disputes via the **official Razorpay Python SDK & Disputes API (`POST /v1/disputes/{id}/contest`)**, while routing uncertain cases to a human analyst with full SHAP explainability.
+1. **Multimodal Perception Council**: Cross-references customer claim statements against uploaded photos via **Google Gemini 3.6 Flash / 2.5 Flash** to detect visual contradictions, and extracts real camera EXIF metadata (capture timestamp, GPS coordinates, camera model).
+2. **Telemetry Correlation**: Compares evidence coordinates and capture time against authoritative merchant logistics records (`merchant_refs.json`) to detect geofence/temporal mismatches.
+3. **Statistical Gatekeeper**: Gates automated actions behind a calibrated `CatBoostClassifier` (ROC-AUC `0.9529`, Brier Score `0.0579`) with SHAP TreeExplainer feature attributions.
+4. **Dynamic Operational Resolution**:
+   - **Win Probability ≥ 85% (`AUTO_CONTEST`)**: Compiles rigid Visa CE 3.0 evidence arrays and transmits to Razorpay Disputes API (`POST /v1/disputes/{id}/contest`).
+   - **Win Probability < 60% (`CONCEDE LIABILITY`)**: Formally records liability acceptance to protect merchant capital from the non-refundable ₹1,500 penalty fee.
+   - **60% ≤ Win Probability < 85% (`PRIORITY TRIAGE`)**: Routes case to senior risk specialists for manual review.
+5. **Analyst Decision Station with Confirmation Modal**: Human-in-the-loop review station with a formal audit modal before committing determinations to the case ledger.
+6. **Forensically Honest PDF Audit Receipt**: Generates downloadable, court-ready PDF audit reports on demand via `ReportLab` directly from backend case records.
 
 ---
 
@@ -67,108 +75,135 @@ Rebuttal is an autonomous system that:
 
 ```mermaid
 graph TD
-    A["Dispute Intake: Claim + Image + Transaction Data"] --> B["Layer 1 — Perception Council"]
-    B -->|"VLM Contradiction Check + EXIF Forensics"| C["Layer 2 — Statistical Gatekeeper"]
-    C -->|"Calibrated Win Probability + SHAP Drivers"| D{"3-Tier Confidence Router"}
-    D -- "Win Probability > 0.85" --> E["Layer 3 — Auto-Contest via Razorpay API"]
-    D -- "0.60 ≤ Win Probability ≤ 0.85" --> F["Priority Human Review Queue"]
-    D -- "Win Probability < 0.60" --> G["Concede Liability (Avoid Penalty Fee)"]
+    A["Customer Dispute Submission: Claim + Evidence Image + Transaction ID"] --> B["Case Store: JSON File Persistence (data/cases/)"]
+    B --> C["Layer 1: Perception Council"]
+    C -->|"Gemini VLM Contradiction Check"| D["Forensic Features"]
+    C -->|"Real EXIF GPS & Timestamp Extraction"| E["Telemetry Engine"]
+    E -->|"Haversine Distance vs Merchant Reference"| D
+    D --> F["Layer 2: CatBoost Statistical Gatekeeper"]
+    F -->|"Calibrated Win Probability + SHAP Attribution"| G{"3-Tier Confidence Router"}
+    G -- "Win Probability ≥ 0.85" --> H["AUTO-CONTEST: Razorpay CE 3.0 API"]
+    G -- "0.60 ≤ Win Probability < 0.85" --> I["PRIORITY TRIAGE: Specialist Queue"]
+    G -- "Win Probability < 0.60" --> J["CONCEDE LIABILITY: Avoid ₹1,500 Penalty Fee"]
+    H & I & J --> K["Analyst Review Station + Confirmation Modal"]
+    K --> L["Final Action & Resolution + PDF Audit Receipt"]
 ```
 
-### Layer 1 — Perception Council (Agentic Multimodal Forensics)
+---
 
-| Component | Role |
-|---|---|
-| **Primary VLM** | Google Gemini 3.6 Flash / 2.5 Flash — flags physical contradictions between claim text and evidence image |
-| **Failover VLM** | Groq Cloud Vision, invoked automatically on primary quota/timeout |
-| **Image Forensics** | Deterministic EXIF extraction (GPS + capture timestamp) against delivery logs, with an explicit fallback flag for EXIF-stripped screenshots |
-| **Output Schema** | Strictly typed Pydantic `VisionAssessment` — `vlm_contradiction_found`, `vision_confidence_score`, `insufficient_evidence`, `rationale` |
+## Two-Role Platform Architecture
 
-### Layer 2 — Statistical Gatekeeper (CatBoost ML Engine)
+### 1. Risk Operations Console (`/admin` or `/`)
+- **Dispute Queue**: Central operations hub displaying all active cases, status filters (New, Evidence Received, Awaiting Review, Submitted, Conceded), and real-time cross-tab sync.
+- **5-Stage Defense Workflow**:
+  - `01 Intake`: Transaction data, dispute claims, customer KYC profile, and customer evidence responses.
+  - `02 Evidence Analysis`: Dual-viewport pixel examination, VLM contradiction detection, and EXIF/GPS telemetry validation.
+  - `03 Risk Assessment`: Calibrated win probability gauge, 0.85 policy threshold margin, and human-readable SHAP drivers.
+  - `04 Analyst Review`: Recommendation review (`Approve (Auto-Contest)`, `Approve (Concede Liability)`, `Override Strategy`, or `Request Additional Evidence`) with **Decision Confirmation Modal**.
+  - `05 Final Action & Resolution`: Dynamic display for CE 3.0 submission vs Liability Acceptance, live API transmission, and PDF Audit Receipt download.
 
-- **Model**: `CatBoostClassifier`, using native ordered target statistics for categorical features (dispute reason codes, merchant categories, etc.) — no brittle one-hot encoding pipelines.
-- **Explainability**: `shap.TreeExplainer` computes per-dispute feature attribution for the human review dashboard.
-- **Calibration**: Validated against held-out data — Brier Score `0.0579`, ROC-AUC `0.9529`.
+### 2. Customer Dispute Portal (`/customer`)
+- **Strict Role Isolation**: Completely separated from admin routes and controls.
+- **My Disputes**: Cardholders view submitted disputes, active status badges, and action-required banners.
+- **Submit Dispute**: Intake form with real-time transaction ID validation, amount, reason code, claim narrative, and evidence image upload.
+- **Additional Evidence Response**: Direct interface for customers to fulfill evidence requests issued by risk operations.
 
-### Layer 3 — Orchestrator & Platform Integration
+---
 
-State machine built on **LangGraph**, with a strict 3-tier confidence split:
+## Forensic & Telemetry Honesty
 
-- **`> 0.85` → Auto-Contest**: Synthesizes a CE 3.0 evidence payload and fires the contest request via the official Razorpay SDK.
-- **`0.60 – 0.85` → Priority Review**: Routed to the analyst triage queue with SHAP-backed reasoning.
-- **`< 0.60` → Concede**: Recommends accepting liability to avoid a larger penalty-fee loss.
+Rebuttal enforces strict truth-in-evidence standards:
+- **No Fabricated Telemetry**: If an image lacks EXIF data (common in chat apps or screenshots), it is explicitly marked `Unavailable / Stripped`.
+- **GPS Honesty**: If EXIF exists without GPS tags, coordinates are flagged `Unavailable` and delivery correlation is marked `NOT VERIFIABLE`.
+- **Telemetry Verification**: Delivery `MATCH` is asserted **only** when real coordinate data exists in both the image EXIF and merchant logistics delivery records, and falls within acceptable distance/time tolerance limits. If merchant records are missing, the system explicitly reports:
+  > *"Merchant delivery telemetry unavailable — correlation not verifiable."*
 
 ---
 
 ## Quantitative Justification for the 0.85 Auto-Contest Threshold
 
-The threshold was derived from an asymmetric financial cost model rather than chosen arbitrarily:
+The 0.85 threshold is mathematically derived from the asymmetric cost matrix:
 
 $$\text{Net Recovery} = (TP \times V_{tx}) - (FP \times (V_{tx} + C_{fee})) - ((FN + TN) \times C_{triage})$$
 
-where `C_fee = ₹1,500` (dispute-loss penalty) and `C_triage = ₹200` (analyst review cost).
+where $C_{fee} = \text{₹1,500}$ (network dispute-loss penalty) and $C_{triage} = \text{₹200}$ (analyst triage overhead).
 
 | Threshold | Auto-Contest Volume | Precision (Win Rate) | False Positives | Net Financial Impact | Status |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | 0.50 | 903 | 65.7% | 310 | ₹29,60,600 | High penalty exposure |
 | 0.70 | 808 | 72.3% | 224 | ₹42,25,600 | High penalty exposure |
-| **0.85** | **762** | **73.9%** | **199** | **₹43,13,900** | ⭐ **Optimal** |
-| 0.90 | 357 | 97.5% | 9 | ₹41,42,900 | Conservative |
-
-> Threshold `0.85` maximizes net recovered capital while suppressing dispute-loss penalty exposure — the tradeoff a merchant risk team would actually optimize for.
+| **0.85** | **762** | **73.9%** | **199** | **₹43,13,900** | ⭐ **Optimal Recovery** |
+| 0.90 | 357 | 97.5% | 9 | ₹41,42,900 | Overly conservative |
 
 ---
 
 ## Tech Stack
 
-| Category | Tools |
+| Component | Technologies |
 |---|---|
-| **Platform Integration** | `razorpay` (Official Python SDK) |
-| **Agent Orchestration** | `langgraph`, `pydantic` |
-| **Vision & Language Models** | Google GenAI SDK (`google-genai`), Groq Cloud API (`httpx`) |
-| **ML & Forensics** | `catboost`, `shap`, `scikit-learn`, `exifread`, `pillow`, `pandas`, `numpy` |
-| **Backend** | `fastapi`, `uvicorn` |
-| **Frontend / Dashboard** | Column / Brex FinTech Design System (Vanilla JS, CSS Tokens) |
+| **Backend** | FastAPI, Uvicorn, Pydantic, Python 3.10+ |
+| **ML & Explainability** | CatBoostClassifier, SHAP (TreeExplainer), Scikit-Learn |
+| **Multimodal Vision** | Google Gemini 3.6 Flash / 2.5 Flash (`google-genai`), Pillow |
+| **Forensics** | ExifRead, Haversine Coordinate Distance Math |
+| **Audit Generation** | ReportLab 5.x (In-memory PDF generation) |
+| **Agent Orchestration** | LangGraph, Razorpay Python SDK |
+| **Persistence** | File-backed atomic JSON Case Store (`data/cases/`) |
+| **Frontend** | Vanilla JS, CSS Custom Properties, FinTech Operations Design System |
 
 ---
 
-## Quickstart & Launch
+## Quickstart & Setup
 
-### 1. Clone & install dependencies
+### 1. Clone & Install Dependencies
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/chethanataltaje/multimodal-chargeback-defender.git
 cd multimodal-chargeback-defender
-pip install -r requirements.txt
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
 ```
 
-### 2. Configure environment
+### 2. Configure Environment
 
 Create a `.env` file at the project root:
 
 ```ini
-# Required
+# Required for VLM perception
 GEMINI_API_KEY=your_gemini_api_key
+
+# Optional (Failover VLM)
 GROQ_API_KEY=your_groq_api_key
 
-# Optional — omit to run the Razorpay SDK in sandbox/mock mode
+# Optional: Razorpay Live/Testnet Credentials (defaults to Sandbox simulation if omitted)
 RAZORPAY_KEY_ID=rzp_test_your_key_id
 RAZORPAY_KEY_SECRET=your_key_secret
 ```
 
-### 3. Launch the web console
+### 3. Start the Server
 
 ```bash
-python server.py
+uvicorn server:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Open **http://127.0.0.1:8000** in your browser.
+- **Portal Landing**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+- **Admin Risk Console**: [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) *(Demo login: `admin@razorpay.com` / `admin123`)*
+- **Customer Portal**: [http://127.0.0.1:8000/customer](http://127.0.0.1:8000/customer) *(Demo login: any email/password)*
 
-### 4. Or run the pipeline via CLI
+---
 
-```bash
-python main.py
-```
+## Key API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/disputes` | List all disputes in the operations queue |
+| `GET` | `/api/disputes/{id}` | Fetch authoritative dispute record |
+| `POST` | `/api/disputes` | Customer submits new dispute with evidence image |
+| `POST` | `/api/disputes/{id}/analyze` | Run VLM + EXIF + CatBoost defense pipeline |
+| `POST` | `/api/disputes/{id}/review` | Persist analyst determination to audit trail |
+| `POST` | `/api/disputes/{id}/submit` | Execute Razorpay CE 3.0 submission or Liability Concession |
+| `GET` | `/api/disputes/{id}/audit-receipt` | Stream Court-Ready PDF Audit Receipt (ReportLab) |
+| `POST` | `/api/customer/disputes/{id}/respond-info` | Customer submits requested supplemental evidence |
 
 ---
 
@@ -176,52 +211,44 @@ python main.py
 
 ```
 multimodal-chargeback-defender/
-├── server.py                   # FastAPI backend & multipart image upload endpoints
-├── main.py                     # CLI pipeline runner (3 demo scenarios)
+├── server.py                       # FastAPI application & REST/PDF endpoints
+├── main.py                         # CLI multi-scenario runner
+├── requirements.txt                # Full Python dependencies
 ├── src/
-│   ├── perception/             # Layer 1: Gemini 3.6 Flash VLM + EXIF forensics
-│   │   ├── vlm_analyzer.py
-│   │   └── metadata_extractor.py
-│   ├── gatekeeper/             # Layer 2: CatBoost ML engine + SHAP explainability
-│   │   ├── predictor.py
-│   │   ├── train_model.py
-│   │   └── gatekeeper_model.cbm
-│   ├── orchestrator/           # Layer 3: LangGraph state machine & Razorpay SDK
-│   │   ├── agent.py
-│   │   └── razorpay_client.py
-│   └── schemas/                # Strictly typed Pydantic data contracts
-│       └── data_models.py
-├── frontend/                   # Column / Brex FinTech Web Console
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-├── data/                       # Synthetic training dataset & generator
-│   ├── generate_synthetic_data.py
-│   └── synthetic_chargeback_data.csv
-└── requirements.txt
+│   ├── case_store.py               # Authoritative JSON case store & audit trail
+│   ├── orchestrator/
+│   │   ├── agent.py                # LangGraph defense workflow orchestrator
+│   │   └── razorpay_client.py      # Razorpay SDK CE 3.0 client & sandbox
+│   ├── perception/
+│   │   ├── vlm_analyzer.py         # Google Gemini multimodal contradiction analyzer
+│   │   └── metadata_extractor.py   # EXIF GPS/timestamp extraction engine
+│   ├── gatekeeper/
+│   │   ├── predictor.py            # CatBoost win probability & SHAP explainer
+│   │   ├── train_model.py          # Model training pipeline
+│   │   └── gatekeeper_model.cbm    # Serialized CatBoost binary model
+│   └── schemas/
+│       └── data_models.py          # Pydantic data schemas & state models
+├── frontend/
+│   ├── index.html                  # Risk Operations Console SPA
+│   ├── app.js                      # Admin controller & multi-stage state engine
+│   ├── style.css                   # Enterprise design tokens & layouts
+│   ├── landing.html                # Role selection portal
+│   └── customer/
+│       ├── index.html              # Customer Dispute Portal SPA
+│       └── app.js                  # Customer intake & dispute tracking logic
+└── data/
+    ├── merchant_refs.json          # Merchant logistics & delivery telemetry references
+    ├── test_samples/               # Illustrative test evidence imagery
+    └── cases/                      # Authoritative dispute JSON storage records
 ```
 
 ---
 
 ## Limitations & Disclosures
 
-We believe transparency here matters more than a polished claim:
-
-- **Training data is synthetic.** The CatBoost model is trained on a generated dataset of 25,000 mathematically correlated dispute rows modeling realistic fraud/legitimate distributions — no team has access to real cardholder dispute records for a hackathon.
-- **EXIF metadata is often unavailable.** Images shared via WhatsApp, iMessage, or screenshots frequently have GPS/timestamp metadata stripped. The system flags "metadata unavailable" as its own high-risk signal rather than assuming EXIF will always be present.
-- **Vision model outputs carry uncertainty.** Ambiguous or low-quality images can produce low-confidence contradiction flags; these are surfaced to the human reviewer rather than silently auto-contested.
-- **This is a defense-only system.** It never communicates with, or attempts to persuade, the end customer — all outputs are directed at back-office risk operations and Razorpay CE 3.0 dispute APIs.
-
----
-
-## Roadmap
-
-- [x] 3-tier confidence router with priority human triage band (0.60 – 0.85)
-- [x] Live custom image drag-and-drop & multipart upload pipeline
-- [x] SHAP feature-level attribution & unit economics justification
-- [ ] Validate the CatBoost model against real anonymized dispute data from merchant partners
-- [ ] Add multi-image evidence support (sequential unboxing and delivery photos)
-- [ ] Extend SHAP dashboard with cohort-level fraud pattern analysis
+- **Synthetic Baseline Distribution**: The CatBoost model is trained on a synthetic dataset of 25,000 mathematically correlated dispute transactions due to the confidentiality of proprietary cardholder data.
+- **EXIF Stripping by Social Platforms**: Images uploaded through social channels (WhatsApp, screenshots) frequently lack EXIF metadata. The system flags this explicitly as an unverified signal rather than assuming tampering.
+- **Defense-Only Scope**: The system never communicates unprompted messages or applies persuasive pressure to the cardholder; it operates strictly as an internal decision engine and API integration layer.
 
 ---
 

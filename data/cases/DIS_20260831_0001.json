@@ -1,0 +1,192 @@
+{
+  "dispute_id": "DIS_20260831_0001",
+  "source": "customer_submitted",
+  "transaction_id": "pay_abcd",
+  "customer_id": "CUST_Y2HLDG",
+  "customer_email": "chethanataltaje@gmail.com",
+  "amount": 20000.0,
+  "currency": "INR",
+  "reason": "Damaged / Defective Goods",
+  "claim": "Headphones arrived with  torn and peeling ear cushions",
+  "merchant_category": "general",
+  "user_account_age_days": 365,
+  "prior_chargeback_count": 0,
+  "evidence": {
+    "source": "customer_submitted",
+    "filename": "20260831_152557.jpg",
+    "path": "data\\uploads\\DIS_20260831_0001_b260c50f.jpg",
+    "url": "/data/uploads/DIS_20260831_0001_b260c50f.jpg",
+    "mime_type": "image/jpeg",
+    "size_bytes": 3367970
+  },
+  "status": "approved",
+  "analysis": {
+    "vlm_contradiction_found": false,
+    "vision_confidence_score": 0.98,
+    "insufficient_evidence": false,
+    "vision_reasoning": "The photo clearly depicts black headphones with visible peeling and material tearing on both ear cushions, which supports the customer's claim rather than contradicting it.",
+    "metadata_available": true,
+    "metadata_match": true,
+    "camera_device": "samsung SM-M536B",
+    "gps_coordinates": null,
+    "capture_timestamp": "2026:08:31 15:25:57",
+    "exif_note": "EXIF metadata was present in the submitted file. Metadata presence alone does not establish image originality or authenticity.",
+    "gps_correlation": "NOT_VERIFIABLE",
+    "gps_distance_meters": null,
+    "timestamp_correlation": "NOT_VERIFIABLE",
+    "timestamp_difference_minutes": null,
+    "merchant_reference": {}
+  },
+  "risk": {
+    "win_probability": 0.030370903089595076,
+    "top_drivers": [
+      {
+        "feature": "vlm_contradiction_found",
+        "impact": -0.9361806749749069
+      },
+      {
+        "feature": "metadata_match",
+        "impact": 0.5439275340511929
+      },
+      {
+        "feature": "reason_code",
+        "impact": -0.5345313288964755
+      }
+    ],
+    "routing_tier": "STANDARD_REVIEW",
+    "final_action": "RECOMMEND_LIABILITY_ACCEPTANCE",
+    "action_details": {
+      "recommendation": "Accept Dispute Liability",
+      "reason": "Win probability < 60%. Contesting carries high risk of non-refundable ₹1,500 dispute penalty fee.",
+      "top_drivers": [
+        {
+          "feature": "vlm_contradiction_found",
+          "impact": -0.9361806749749069
+        },
+        {
+          "feature": "metadata_match",
+          "impact": 0.5439275340511929
+        },
+        {
+          "feature": "reason_code",
+          "impact": -0.5345313288964755
+        }
+      ]
+    }
+  },
+  "review": {
+    "action": "APPROVE",
+    "override_strategy": null,
+    "override_reason": null,
+    "evidence_type": "POD",
+    "evidence_note": null,
+    "analyst_name": "Chethana A.",
+    "reviewed_at": "2026-08-31T17:57:56.282529+00:00"
+  },
+  "submission": {
+    "status": "LIABILITY_CONCEDED",
+    "action": "CONCEDE",
+    "reason": "Analyst approved Concede Liability recommendation to avoid penalty fee.",
+    "submitted_at": "2026-08-31T17:34:23.757414+00:00"
+  },
+  "audit_trail": [
+    {
+      "event": "case_created",
+      "timestamp": "2026-08-31T17:30:31.099892+00:00"
+    },
+    {
+      "event": "evidence_received",
+      "timestamp": "2026-08-31T17:30:31.099919+00:00",
+      "metadata": {
+        "filename": "20260831_152557.jpg",
+        "size_bytes": 3367970
+      }
+    },
+    {
+      "event": "analysis_started",
+      "timestamp": "2026-08-31T17:30:46.889886+00:00"
+    },
+    {
+      "event": "analysis_completed",
+      "timestamp": "2026-08-31T17:30:57.099674+00:00",
+      "routing_tier": "STANDARD_REVIEW",
+      "win_probability": 0.030370903089595076
+    },
+    {
+      "event": "analyst_requested_evidence",
+      "timestamp": "2026-08-31T17:33:09.725224+00:00",
+      "analyst": "Chethana A."
+    },
+    {
+      "event": "evidence_requested_dispatched",
+      "timestamp": "2026-08-31T17:33:12.360449+00:00",
+      "type": "POD",
+      "note": null
+    },
+    {
+      "event": "evidence_requested_dispatched",
+      "timestamp": "2026-08-31T17:33:15.473544+00:00",
+      "type": "POD",
+      "note": null
+    },
+    {
+      "event": "evidence_requested_dispatched",
+      "timestamp": "2026-08-31T17:33:17.351768+00:00",
+      "type": "POD",
+      "note": null
+    },
+    {
+      "event": "evidence_requested_dispatched",
+      "timestamp": "2026-08-31T17:33:22.104808+00:00",
+      "type": "POD",
+      "note": null
+    },
+    {
+      "event": "customer_info_responded",
+      "timestamp": "2026-08-31T17:33:44.670585+00:00",
+      "has_evidence": false,
+      "submitted_by": "CUST_Y2HLDG"
+    },
+    {
+      "event": "analyst_approved",
+      "timestamp": "2026-08-31T17:34:21.405381+00:00",
+      "analyst": "Chethana A."
+    },
+    {
+      "event": "liability_conceded",
+      "timestamp": "2026-08-31T17:34:23.762413+00:00",
+      "reason": "Analyst approved Concede Liability recommendation to avoid penalty fee.",
+      "analyst": "Chethana A."
+    },
+    {
+      "event": "analyst_approved",
+      "timestamp": "2026-08-31T17:36:24.401602+00:00",
+      "analyst": "Chethana A."
+    },
+    {
+      "event": "analyst_approved",
+      "timestamp": "2026-08-31T17:41:20.114474+00:00",
+      "analyst": "Chethana A."
+    },
+    {
+      "event": "analyst_approved",
+      "timestamp": "2026-08-31T17:57:56.286936+00:00",
+      "analyst": "Chethana A."
+    }
+  ],
+  "created_at": "2026-08-31T17:30:31.100296+00:00",
+  "updated_at": "2026-08-31T17:57:56.286961+00:00",
+  "additional_info_request": {
+    "status": "responded",
+    "title": "Information Required: POD",
+    "message": "Please provide clarifying evidence for your dispute.",
+    "requested_by": "Chethana A.",
+    "requested_at": "2026-08-31T17:33:22.102344+00:00",
+    "response": {
+      "message": "Order Number 123456",
+      "evidence": null,
+      "submitted_at": "2026-08-31T17:33:44.668490+00:00",
+      "submitted_by": "CUST_Y2HLDG"
+    }
+  }
+}

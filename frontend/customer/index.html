@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rebuttal — Customer Dispute Portal</title>
+  <meta name="description" content="Submit and track your payment disputes securely through the Rebuttal customer portal." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:         #111a4a;
+      --seafoam:      #167e6c;
+      --seafoam-light:#e6f4f1;
+      --seafoam-dark: #0e5c50;
+      --cloud:        #f6f6f8;
+      --white:        #ffffff;
+      --slate:        #4a5568;
+      --slate-light:  #718096;
+      --border:       #e2e8f0;
+      --border-focus: #167e6c;
+      --danger:       #dc2626;
+      --danger-bg:    #fef2f2;
+      --success:      #059669;
+      --success-bg:   #ecfdf5;
+      --shadow:       0 2px 12px rgba(17,26,74,0.08);
+      --shadow-lg:    0 8px 40px rgba(17,26,74,0.14);
+      --radius:       10px;
+      --radius-sm:    6px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--cloud);
+      color: var(--navy);
+      font-size: 14px;
+    }
+
+    /* ── Layout ── */
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── Header ── */
+    .cp-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .cp-brand {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: 0.06em;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .cp-brand-dot { color: var(--seafoam); }
+    .cp-brand-tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--slate-light);
+      background: var(--cloud);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      letter-spacing: 0.04em;
+    }
+    .cp-header-right { display: flex; align-items: center; gap: 16px; }
+    .cp-user-pill {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500; color: var(--slate);
+    }
+    .cp-avatar {
+      width: 32px; height: 32px;
+      background: var(--seafoam-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--seafoam);
+    }
+    .btn-signout {
+      font-size: 12px; font-weight: 500; color: var(--slate-light);
+      background: none; border: none; cursor: pointer; padding: 4px 8px;
+    }
+    .btn-signout:hover { color: var(--navy); }
+
+    /* ── Pages ── */
+    .page { display: none; flex: 1; }
+    .page.active { display: flex; flex-direction: column; flex: 1; }
+
+    /* ── Login Page ── */
+    #page-login {
+      align-items: center;
+      justify-content: center;
+      background: var(--cloud);
+      padding: 40px 24px;
+    }
+    .login-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 44px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow-lg);
+    }
+    .login-logo {
+      font-size: 20px; font-weight: 800; color: var(--navy);
+      letter-spacing: 0.06em; margin-bottom: 6px;
+    }
+    .login-logo span { color: var(--seafoam); }
+    .login-tagline { font-size: 12px; color: var(--slate-light); margin-bottom: 32px; }
+    .login-title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .login-sub { font-size: 13.5px; color: var(--slate); margin-bottom: 28px; }
+
+    /* ── My Disputes Page ── */
+    #page-disputes {
+      padding: 40px 0;
+      align-items: center;
+      background: var(--cloud);
+    }
+    .cp-container {
+      width: 100%; max-width: 760px;
+      padding: 0 24px;
+    }
+    .page-header-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .page-title { font-size: 22px; font-weight: 800; color: var(--navy); }
+    .page-sub { font-size: 13.5px; color: var(--slate); margin-top: 4px; }
+
+    .empty-state {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 56px 32px;
+      text-align: center; box-shadow: var(--shadow);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 16px; }
+    .empty-title { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .empty-sub { font-size: 13.5px; color: var(--slate); margin-bottom: 28px; }
+
+    .dispute-list { display: flex; flex-direction: column; gap: 12px; }
+    .dispute-row {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px;
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .dr-main { display: flex; flex-direction: column; gap: 3px; }
+    .dr-id { font-size: 13px; font-weight: 700; color: var(--navy); font-family: 'Courier New', monospace; }
+    .dr-desc { font-size: 12.5px; color: var(--slate); }
+    .dr-meta { font-size: 11.5px; color: var(--slate-light); margin-top: 2px; }
+    .dr-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .status-badge {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; border-radius: 20px;
+      padding: 3px 10px;
+    }
+    .badge-received { background: #e0f2fe; color: #0369a1; }
+    .badge-analyzing { background: #fef3c7; color: #92400e; }
+    .badge-submitted { background: var(--success-bg); color: var(--success); }
+    .badge-new { background: var(--cloud); color: var(--slate); }
+    .badge-action-required { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; font-weight: 700; }
+
+    /* ── Submit Dispute Page ── */
+    #page-submit {
+      padding: 40px 0;
+      align-items: center;
+      background: var(--cloud);
+    }
+
+    /* ── Confirmation Page ── */
+    #page-confirm {
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      background: var(--cloud);
+    }
+    .confirm-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 14px; padding: 48px 40px;
+      max-width: 480px; width: 100%;
+      text-align: center; box-shadow: var(--shadow-lg);
+    }
+    .confirm-check {
+      width: 64px; height: 64px;
+      background: var(--success-bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 24px;
+    }
+    .confirm-title { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .confirm-sub { font-size: 14px; color: var(--slate); margin-bottom: 28px; line-height: 1.6; }
+    .confirm-ref-box {
+      background: var(--cloud); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px 20px;
+      text-align: left; margin-bottom: 28px;
+    }
+    .confirm-ref-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--slate-light); text-transform: uppercase; margin-bottom: 4px; }
+    .confirm-ref-id { font-size: 16px; font-weight: 700; font-family: 'Courier New', monospace; color: var(--navy); }
+
+    /* ── Form UI ── */
+    .form-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 28px;
+      box-shadow: var(--shadow); margin-bottom: 16px;
+    }
+    .form-section-title {
+      font-size: 13px; font-weight: 700; color: var(--navy);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 20px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { font-size: 12.5px; font-weight: 600; color: var(--slate); }
+    .form-label .req { color: var(--danger); margin-left: 2px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 13.5px;
+      font-family: inherit;
+      color: var(--navy);
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(22,126,108,0.12);
+    }
+    .form-textarea { resize: vertical; min-height: 88px; line-height: 1.5; }
+    .form-select { cursor: pointer; }
+    .amount-row { display: flex; align-items: center; }
+    .amount-prefix {
+      background: var(--cloud); border: 1px solid var(--border);
+      border-right: none; border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      padding: 9px 12px; font-size: 13.5px; font-weight: 600; color: var(--slate);
+    }
+    .amount-input {
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
+    }
+
+    /* ── Dropzone ── */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--seafoam);
+      background: var(--seafoam-light);
+    }
+    .dz-icon { font-size: 32px; margin-bottom: 10px; }
+    .dz-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .dz-sub { font-size: 12.5px; color: var(--slate-light); }
+    .dz-sub a { color: var(--seafoam); text-decoration: none; font-weight: 500; }
+    .dz-formats { font-size: 11.5px; color: var(--slate-light); margin-top: 8px; }
+
+    .image-preview {
+      display: none;
+      background: var(--cloud); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px;
+      align-items: center; gap: 12px; margin-top: 10px;
+    }
+    .image-preview.visible { display: flex; }
+    .preview-thumb {
+      width: 48px; height: 48px; border-radius: 6px;
+      object-fit: cover; flex-shrink: 0;
+    }
+    .preview-info { flex: 1; min-width: 0; }
+    .preview-name { font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .preview-size { font-size: 11.5px; color: var(--slate-light); }
+    .btn-remove-img { background: none; border: none; cursor: pointer; color: var(--slate-light); font-size: 18px; padding: 4px; }
+    .btn-remove-img:hover { color: var(--danger); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: inherit; font-size: 13.5px; font-weight: 600;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      cursor: pointer; border: none; transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--seafoam); color: var(--white);
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--seafoam-dark); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-outline {
+      background: var(--white); color: var(--navy);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--navy); }
+    .btn-lg { font-size: 14.5px; padding: 12px 28px; }
+    .btn-block { width: 100%; justify-content: center; }
+
+    /* ── Error / Info ── */
+    .error-box {
+      background: var(--danger-bg); border: 1px solid #fca5a5;
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      font-size: 13px; color: var(--danger); margin-bottom: 16px;
+      display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500; color: var(--slate);
+      text-decoration: none; margin-bottom: 20px;
+    }
+    .back-link:hover { color: var(--navy); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER (hidden on login page)
+  ═══════════════════════════════════════════════════════════ -->
+  <header class="cp-header" id="cp-header" style="display:none;">
+    <div class="cp-brand">
+      REBUTTAL<span class="cp-brand-dot">.</span>
+      <span class="cp-brand-tag">Dispute Portal</span>
+    </div>
+    <div class="cp-header-right">
+      <button class="btn-signout" onclick="showPage('page-disputes')" style="font-size:13px; font-weight:600; color:var(--slate); padding:6px 12px; border-radius:6px; background:var(--cloud); cursor:pointer;">My Disputes</button>
+      <button class="btn-signout" onclick="showPage('page-submit')" style="font-size:13px; font-weight:600; color:var(--seafoam); padding:6px 12px; border-radius:6px; background:var(--seafoam-light); cursor:pointer;">+ Submit a Dispute</button>
+      <div class="cp-user-pill">
+        <div class="cp-avatar" id="hdr-avatar">—</div>
+        <span id="hdr-user-name">—</span>
+      </div>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PAGE: LOGIN
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="page active" id="page-login">
+    <div class="login-card">
+      <div class="login-logo">REBUTTAL<span>.</span></div>
+      <div class="login-tagline">Dispute Resolution Portal</div>
+      <h1 class="login-title">Sign in to continue</h1>
+      <p class="login-sub">Submit or track your payment disputes.</p>
+
+      <div class="error-box" id="login-error">Incorrect email or password. Please try again.</div>
+
+      <form id="login-form" onsubmit="doLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email address</label>
+          <input class="form-input" id="login-email" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div class="form-group" style="margin-bottom:24px;">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="btn-login">
+          <span class="spinner" id="login-spinner"></span>
+          <span id="login-btn-text">Sign in</span>
+        </button>
+      </form>
+
+      <p style="font-size:12px; color: var(--slate-light); margin-top: 18px; text-align:center;">
+        Demo credentials: <strong>any email</strong> + <strong>any password</strong>
+      </p>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PAGE: MY DISPUTES
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="page" id="page-disputes">
+    <div class="cp-container">
+      <div class="page-header-row">
+        <div>
+          <h1 class="page-title">My Disputes</h1>
+          <p class="page-sub">View and manage your submitted payment disputes.</p>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('page-submit')" id="btn-new-dispute">
+          Submit a Dispute →
+        </button>
+      </div>
+
+      <div id="disputes-loading" style="text-align:center; padding: 40px; color: var(--slate-light); display:none;">
+        Loading your disputes…
+      </div>
+
+      <div id="disputes-empty" class="empty-state" style="display:none;">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No disputes yet</div>
+        <div class="empty-sub">You haven't submitted any disputes. If you have an issue with a transaction, we're here to help.</div>
+        <button class="btn btn-primary" onclick="showPage('page-submit')">Submit a Dispute →</button>
+      </div>
+
+      <div id="disputes-list" class="dispute-list"></div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PAGE: SUBMIT DISPUTE
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="page" id="page-submit">
+    <div class="cp-container">
+      <a class="back-link" onclick="showPage('page-disputes')" href="#">
+        ← Back to My Disputes
+      </a>
+
+      <div style="margin-bottom: 24px;">
+        <h1 class="page-title">Submit a Dispute</h1>
+        <p class="page-sub">Provide transaction details and supporting evidence for your dispute.</p>
+      </div>
+
+      <div class="error-box" id="submit-error"></div>
+
+      <form id="dispute-form" onsubmit="submitDispute(event)">
+
+        <!-- Transaction Details -->
+        <div class="form-card">
+          <div class="form-section-title">Transaction Details</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="inp-txn-id">Transaction ID <span class="req">*</span></label>
+              <input class="form-input" id="inp-txn-id" type="text" placeholder="pay_XXXXXXXXXXXXXXXXXX" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-amount">Disputed Amount (₹) <span class="req">*</span></label>
+              <div class="amount-row">
+                <span class="amount-prefix">₹</span>
+                <input class="form-input amount-input" id="inp-amount" type="number" min="1" step="0.01" placeholder="0.00" required />
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inp-reason">Dispute Reason <span class="req">*</span></label>
+            <select class="form-select" id="inp-reason" required>
+              <option value="" disabled selected>Select a reason…</option>
+              <option value="Damaged / Defective Goods">Damaged / Defective Goods</option>
+              <option value="Item Not Received">Item Not Received</option>
+              <option value="Significantly Not as Described">Significantly Not as Described</option>
+              <option value="Unauthorized Transaction">Unauthorized Transaction</option>
+              <option value="Duplicate Charge">Duplicate Charge</option>
+              <option value="Subscription Cancelled">Subscription Cancelled</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dispute Description -->
+        <div class="form-card">
+          <div class="form-section-title">Describe Your Dispute</div>
+          <div class="form-group">
+            <label class="form-label" for="inp-claim">Dispute Description <span class="req">*</span></label>
+            <textarea class="form-textarea" id="inp-claim" rows="4"
+              placeholder="Describe what happened. For example: 'The phone screen arrived completely shattered in pieces and unusable.'"
+              required></textarea>
+            <span style="font-size:12px; color:var(--slate-light); margin-top: 4px;">Be specific. Include what you ordered, what you received, and the issue.</span>
+          </div>
+        </div>
+
+        <!-- Evidence Upload -->
+        <div class="form-card">
+          <div class="form-section-title">Photographic Evidence</div>
+          <p style="font-size:13px; color:var(--slate); margin-bottom:16px;">
+            Upload a clear photo of the item as received. This evidence is critical for your dispute investigation.
+          </p>
+
+          <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;" onchange="handleFileSelected(event)" />
+
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+            <div class="dz-icon">📷</div>
+            <div class="dz-title">Drop your photo here or <a onclick="event.stopPropagation(); document.getElementById('file-input').click();">browse files</a></div>
+            <div class="dz-sub">Drag and drop a JPG, PNG, or WEBP photo</div>
+            <div class="dz-formats">Supported: JPG · PNG · WEBP · HEIC · Max 20MB</div>
+          </div>
+
+          <div class="image-preview" id="image-preview">
+            <img class="preview-thumb" id="preview-thumb" src="" alt="Preview" />
+            <div class="preview-info">
+              <div class="preview-name" id="preview-name"></div>
+              <div class="preview-size" id="preview-size"></div>
+            </div>
+            <button type="button" class="btn-remove-img" onclick="removeImage()" title="Remove image">×</button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 40px;">
+          <button type="button" class="btn btn-outline" onclick="showPage('page-disputes')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-dispute">
+            <span class="spinner" id="submit-spinner"></span>
+            <span id="submit-btn-text">Submit Dispute →</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PAGE: CONFIRMATION
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="page" id="page-confirm">
+    <div class="confirm-card">
+      <div class="confirm-check">✓</div>
+      <h1 class="confirm-title">Dispute Submitted</h1>
+      <p class="confirm-sub">
+        Your dispute has been received and assigned a reference number.
+        Our team will review your evidence and update you on the status.
+      </p>
+      <div class="confirm-ref-box">
+        <div class="confirm-ref-label">Reference Number</div>
+        <div class="confirm-ref-id" id="confirm-ref-id">—</div>
+      </div>
+      <div class="confirm-ref-box" style="margin-bottom:28px;">
+        <div class="confirm-ref-label">Status</div>
+        <div style="font-size:14px; font-weight:600; color: #0369a1;">Evidence Received — Under Review</div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="showPage('page-disputes'); loadDisputes()">
+        View My Disputes
+      </button>
+    </div>
+  </main>
+  <!-- ═══════════════════════════════════════════════════════════
+       PAGE: DISPUTE DETAIL
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="page" id="page-dispute-detail">
+    <div class="cp-container" style="padding-top: 32px; padding-bottom: 48px;">
+      <a class="back-link" onclick="showPage('page-disputes')" href="#">
+        ← Back to My Disputes
+      </a>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
+        <div>
+          <div style="font-size:12px; font-weight:700; color:var(--slate-light); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px;">Dispute Details</div>
+          <h1 class="page-title" id="dtl-dispute-id" style="font-family:'Courier New',monospace;">DIS_XXXXXXXX_XXXX</h1>
+          <p class="page-sub" id="dtl-created-at">Submitted —</p>
+        </div>
+        <div>
+          <span class="status-badge badge-received" id="dtl-status-badge" style="font-size:12.5px; padding:6px 14px;">Under Review</span>
+        </div>
+      </div>
+
+      <!-- ACTION REQUIRED CARD (Shown when admin requests information) -->
+      <div id="dtl-action-required-card" class="form-card" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-left:4px solid #f59e0b; padding:20px; margin-bottom:20px; border-radius:8px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#f59e0b; color:white; font-size:12px; font-weight:800;">!</span>
+          <span style="font-size:14px; font-weight:800; color:#92400e; letter-spacing:.02em;">ACTION REQUIRED</span>
+        </div>
+        <p style="font-size:13px; color:#78350f; margin-bottom:12px; line-height:1.5;">
+          Your dispute analyst needs additional information before the review can continue.
+        </p>
+        <div style="background:white; padding:14px; border-radius:6px; border:1px solid #fde68a; margin-bottom:14px;">
+          <div style="font-size:13px; font-weight:700; color:#92400e; margin-bottom:4px;" id="dtl-req-title">Original Delivery Evidence Required</div>
+          <div style="font-size:13px; color:#4a5568; line-height:1.5;" id="dtl-req-message">Please upload the original delivery photograph and provide the delivery date.</div>
+        </div>
+
+        <form id="dtl-req-form" onsubmit="submitCustomerResponse(event)">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:700; color:#4a5568; margin-bottom:4px;">Your Response Message</label>
+            <textarea id="inp-cust-resp-msg" class="input-control" rows="3" placeholder="Provide additional details requested by your analyst..." style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;" required></textarea>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:12px; font-weight:700; color:#4a5568; margin-bottom:4px;">Attach Additional Evidence Photo (Optional)</label>
+            <input type="file" id="inp-cust-resp-file" accept="image/*" style="font-size:12.5px; color:#4a5568;" />
+          </div>
+          <button type="submit" id="btn-submit-cust-resp" class="btn" style="background:#d97706; border:none; color:white; font-weight:700; padding:10px 20px; border-radius:6px; cursor:pointer;">
+            Submit Information →
+          </button>
+        </form>
+      </div>
+
+      <!-- Transaction Info Card -->
+      <div class="form-card">
+        <div class="form-section-title">Transaction Information</div>
+        <div class="form-row" style="margin-bottom:16px;">
+          <div>
+            <div style="font-size:11.5px; font-weight:600; color:var(--slate-light); text-transform:uppercase; margin-bottom:4px;">Transaction ID</div>
+            <div style="font-size:14px; font-weight:700; font-family:'Courier New',monospace; color:var(--navy);" id="dtl-txn-id">—</div>
+          </div>
+          <div>
+            <div style="font-size:11.5px; font-weight:600; color:var(--slate-light); text-transform:uppercase; margin-bottom:4px;">Disputed Amount</div>
+            <div style="font-size:16px; font-weight:800; color:var(--navy);" id="dtl-amount">₹0.00</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px; font-weight:600; color:var(--slate-light); text-transform:uppercase; margin-bottom:4px;">Dispute Reason</div>
+          <div style="font-size:13.5px; font-weight:600; color:var(--navy);" id="dtl-reason">—</div>
+        </div>
+      </div>
+
+      <!-- Claim Description Card -->
+      <div class="form-card">
+        <div class="form-section-title">My Dispute Claim</div>
+        <div style="font-size:14px; color:var(--navy); line-height:1.6; background:var(--cloud); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border); font-style:italic;" id="dtl-claim">
+          "—"
+        </div>
+      </div>
+
+      <!-- Evidence Card -->
+      <div class="form-card">
+        <div class="form-section-title">Supporting Evidence</div>
+        <div id="dtl-evidence-container">
+          <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+            <img id="dtl-evidence-img" src="" alt="Evidence Photo" style="max-width:240px; max-height:240px; border-radius:8px; border:1px solid var(--border); object-fit:cover;" />
+            <div>
+              <div style="font-size:13.5px; font-weight:700; color:var(--navy); margin-bottom:4px;" id="dtl-evidence-filename">photo.jpg</div>
+              <div style="font-size:12px; color:var(--slate-light);" id="dtl-evidence-size">Image Evidence Uploaded</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;">
+        <button class="btn btn-outline" onclick="showPage('page-disputes')">← Return to My Disputes</button>
+      </div>
+    </div>
+  </main>
+
+</div><!-- #app -->
+
+<script src="/static/customer/app.js?v=4.0"></script>
+</body>
+</html>

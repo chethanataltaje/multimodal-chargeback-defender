@@ -3,358 +3,1425 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rebuttal — Automated defense, backed by proof, not persuasion | Razorpay Buildathon 2026</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <title>Rebuttal — Risk Operations Console | Razorpay CE 3.0</title>
+  <link rel="stylesheet" href="/static/style.css?v=2.2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body>
-
-  <!-- TOP INSTITUTIONAL NAVIGATION (DESIGN.md) -->
-  <nav class="top-nav-bar">
-    <div class="nav-inner">
-      <div class="brand-block">
-        <div class="brand-icon">
-          <!-- Sleek Geometric R Emblem (SVG) -->
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 4H14C16.7614 4 19 6.23858 19 9C19 11.7614 16.7614 14 14 14H6V4Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M6 14L6 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M13 14L19 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="brand-title">REBUTTAL</div>
-          <div class="brand-tagline">Automated defense, backed by proof, not persuasion. • Razorpay Buildathon 2026</div>
-        </div>
-      </div>
-
-      <div class="nav-tabs">
-        <button class="nav-tab-btn active" onclick="switchTab('tab-investigation')">Dispute Intake & Forensics</button>
-        <button class="nav-tab-btn" onclick="switchTab('tab-threshold')">Risk Policy & Cost Matrix</button>
-        <button class="nav-tab-btn" onclick="switchTab('tab-queue')">Analyst Review Queue</button>
-      </div>
-
-      <div class="nav-meta">
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <span>RAZORPAY CE 3.0 ACTIVE</span>
-        </div>
-      </div>
-    </div>
-  </nav>
+<body class="enterprise-app">
 
   <!-- ====================================================================
-       TAB 1: DISPUTE INTAKE & AUTONOMOUS DEFENSE
+       TOP ENTERPRISE APPLICATION HEADER
        ==================================================================== -->
-  <section id="tab-investigation">
-    
-    <!-- Hero & Institutional Trust Stats Row -->
-    <div class="hero-header">
-      <div class="hero-title-row">
-        <div>
-          <h1 class="hero-main-title">Automated Defense, Backed by Proof, Not Persuasion</h1>
-          <p class="hero-subtitle">Rebuttal cross-references visual evidence against customer claims, gating Razorpay CE 3.0 dispute actions behind calibrated CatBoost statistical proof.</p>
+  <header class="app-header" id="app-header" style="display:none;">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="brand-block" onclick="goToQueue()" style="cursor:pointer;" title="Navigate to Dispute Queue">
+          <div class="brand-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 4H14C16.7614 4 19 6.23858 19 9C19 11.7614 16.7614 14 14 14H6V4Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 14L6 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M13 14L19 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">REBUTTAL</span>
+            <span class="brand-subtitle">Dispute Defense Platform</span>
+          </div>
+        </div>
+
+        <div class="header-divider"></div>
+
+        <button type="button" onclick="goToQueue()" title="Navigate to Dispute Queue" style="display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:13px; font-weight:700; color:#111a4a; background:none; border:none; cursor:pointer; padding:4px 8px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>Dispute Queue</span>
+        </button>
+
+        <span style="color:#cbd5e1; font-weight:400;">/</span>
+
+        <div class="case-meta-pill" title="Active Dispute Reference ID">
+          <span class="meta-label">CURRENT CASE</span>
+          <span class="meta-id" id="header-case-id">pay_98a76b54c3210f</span>
+          <button type="button" class="btn-copy-id" onclick="copyCaseId()" title="Copy Case ID">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+
+        <select id="global-case-switcher" onchange="onGlobalCaseSwitch(this.value)" style="display:none; font-family:inherit; font-size:11.5px; font-weight:600; color:#475569; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:5px 8px; cursor:pointer; outline:none; max-width:240px;" title="Quick Demo Test Cases (Secondary Selector)">
+          <option value="" disabled selected>🧪 Demo Preset Selector…</option>
+        </select>
+
+        <div class="status-live-pill">
+          <span class="pulse-dot"></span>
+          <span>RAZORPAY CE 3.0 • LIVE TESTNET</span>
         </div>
       </div>
 
-      <div class="stats-bar-grid">
-        <div class="stat-metric-card">
-          <div class="stat-metric-num">0.9529</div>
-          <div class="stat-metric-label">CatBoost Gatekeeper ROC-AUC</div>
-        </div>
-        <div class="stat-metric-card">
-          <div class="stat-metric-num">0.0579</div>
-          <div class="stat-metric-label">Brier Calibration Score (< 0.10)</div>
-        </div>
-        <div class="stat-metric-card">
-          <div class="stat-metric-num">₹4.31M</div>
-          <div class="stat-metric-label">Net Recovery at 0.85 Threshold</div>
-        </div>
-        <div class="stat-metric-card">
-          <div class="stat-metric-num">Defense-Only</div>
-          <div class="stat-metric-label">Zero User Chatbots / Strict Financial Guardrails</div>
-        </div>
-      </div>
+      <div class="header-right">
+        <button type="button" class="btn-header-link" id="hdr-btn-queue" onclick="goToQueue()" title="Open Dispute Queue" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-weight:600; padding:6px 12px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>Dispute Queue</span>
+        </button>
 
-      <!-- Scenario Selector Strip -->
-      <div class="scenario-strip" id="scenario-selector">
-        <div class="scenario-card active" onclick="loadScenario('scenario-1')">
-          <div class="scenario-tag">Scenario 01 // Auto-Contest</div>
-          <div class="scenario-title">Friendly Fraud</div>
-          <div class="scenario-desc">₹1,19,900 iPhone • Shattered Claim vs Intact Photo</div>
+        <div class="analyst-profile">
+          <div class="avatar" id="admin-avatar">CA</div>
+          <div class="profile-info">
+            <span class="profile-name" id="admin-name">Chethana A.</span>
+            <span class="profile-role">Risk Operations</span>
+          </div>
         </div>
-        <div class="scenario-card" onclick="loadScenario('scenario-2')">
-          <div class="scenario-tag">Scenario 02 // Priority Triage</div>
-          <div class="scenario-title">Borderline Dispute</div>
-          <div class="scenario-desc">₹14,999 Sneakers • Ambiguous Dark Evidence</div>
-        </div>
-        <div class="scenario-card" onclick="loadScenario('scenario-3')">
-          <div class="scenario-tag">Scenario 03 // Concede Liability</div>
-          <div class="scenario-title">Hardware Defect</div>
-          <div class="scenario-desc">₹4,999 Headphones • Genuine Physical Damage</div>
-        </div>
-        <div class="scenario-card" id="card-custom-upload" onclick="enableCustomUploadMode()">
-          <div class="scenario-tag" style="color: var(--color-signal-orange);">Custom Live Test</div>
-          <div class="scenario-title">+ Upload Real File</div>
-          <div class="scenario-desc">Test with your own photo & claim text</div>
-        </div>
+        <button type="button" onclick="adminSignOut()" style="font-size:12px; color:#718096; background:none; border:none; cursor:pointer; padding:4px 8px; font-family:inherit;" title="Sign out of Admin">Sign out</button>
       </div>
-
     </div>
+  </header>
 
-    <!-- 50/50 Workspace Grid -->
-    <div class="workspace-grid">
+  <!-- ====================================================================
+       PERSISTENT WORKFLOW STEPPER
+       ==================================================================== -->
+  <div class="workflow-stepper-bar" id="workflow-stepper-bar" style="display:none;">
+    <div class="stepper-inner">
+      <nav class="stepper-track" aria-label="Dispute Workflow Progress">
+        
+        <!-- Step 1 -->
+        <button type="button" class="step-node active" id="step-btn-1" onclick="navigateToStep(1)">
+          <div class="step-num-circle">
+            <span class="num-text">01</span>
+            <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="step-meta">
+            <span class="step-name">Intake</span>
+            <span class="step-caption">Claim &amp; Evidence</span>
+          </div>
+        </button>
+
+        <div class="step-link-line" id="connector-1"></div>
+
+        <!-- Step 2 -->
+        <button type="button" class="step-node disabled" id="step-btn-2" onclick="navigateToStep(2)">
+          <div class="step-num-circle">
+            <span class="num-text">02</span>
+            <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="step-meta">
+            <span class="step-name">Evidence Analysis</span>
+            <span class="step-caption">VLM &amp; Forensics</span>
+          </div>
+        </button>
+
+        <div class="step-link-line" id="connector-2"></div>
+
+        <!-- Step 3 -->
+        <button type="button" class="step-node disabled" id="step-btn-3" onclick="navigateToStep(3)">
+          <div class="step-num-circle">
+            <span class="num-text">03</span>
+            <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="step-meta">
+            <span class="step-name">Risk Assessment</span>
+            <span class="step-caption">CatBoost &amp; XAI</span>
+          </div>
+        </button>
+
+        <div class="step-link-line" id="connector-3"></div>
+
+        <!-- Step 4 -->
+        <button type="button" class="step-node disabled" id="step-btn-4" onclick="navigateToStep(4)">
+          <div class="step-num-circle">
+            <span class="num-text">04</span>
+            <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="step-meta">
+            <span class="step-name">Analyst Review</span>
+            <span class="step-caption">Human Sign-off</span>
+          </div>
+        </button>
+
+        <div class="step-link-line" id="connector-4"></div>
+
+        <!-- Step 5 -->
+        <button type="button" class="step-node disabled" id="step-btn-5" onclick="navigateToStep(5)">
+          <div class="step-num-circle">
+            <span class="num-text">05</span>
+            <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="step-meta">
+            <span class="step-name">Resolution</span>
+            <span class="step-caption">Final Action &amp; Resolution</span>
+          </div>
+        </button>
+
+      </nav>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       ADMIN LOGIN PAGE
+       ==================================================================== -->
+  <div id="admin-login-overlay" style="
+    display: flex;
+    position: fixed; inset: 0; z-index: 2000;
+    background: #f6f6f8;
+    align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif;
+  ">
+    <div style="
+      background: white; border: 1px solid #e2e8f0;
+      border-radius: 14px; padding: 44px 40px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 8px 40px rgba(17,26,74,0.14);
+    ">
+      <div style="font-size:20px; font-weight:800; color:#111a4a; letter-spacing:.06em; margin-bottom:4px;">REBUTTAL<span style="color:#167e6c;">.</span></div>
+      <div style="font-size:12px; color:#718096; margin-bottom:8px;">Dispute Defense Platform</div>
+      <h1 style="font-size:22px; font-weight:700; color:#111a4a; margin-bottom:6px;">Sign in to Risk Operations</h1>
+      <p style="font-size:13.5px; color:#4a5568; margin-bottom:28px;">Access the authorized administrator console.</p>
+      <div id="admin-login-error" style="background:#fef2f2; border:1px solid #fca5a5; border-radius:6px; padding:10px 14px; font-size:13px; color:#dc2626; margin-bottom:16px; display:none;">Incorrect credentials.</div>
+      <div style="font-size:12px; color:#475569; margin-bottom:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between;">
+        <span>Demo: <strong>admin@razorpay.com</strong> / <strong>admin123</strong></span>
+      </div>
+      <form onsubmit="doAdminLogin(event)">
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#4a5568; margin-bottom:6px;">Work Email</label>
+          <input id="admin-email" type="email" value="admin@razorpay.com" placeholder="admin@razorpay.com" autocomplete="email" required
+            style="width:100%; padding:9px 12px; font-size:13.5px; font-family:inherit; color:#111a4a; background:white; border:1px solid #e2e8f0; border-radius:6px; outline:none;"
+            onfocus="this.style.borderColor='#167e6c'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+        <div style="margin-bottom:24px;">
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#4a5568; margin-bottom:6px;">Password</label>
+          <input id="admin-password" type="password" value="admin123" placeholder="••••••••" autocomplete="current-password" required
+            style="width:100%; padding:9px 12px; font-size:13.5px; font-family:inherit; color:#111a4a; background:white; border:1px solid #e2e8f0; border-radius:6px; outline:none;"
+            onfocus="this.style.borderColor='#167e6c'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+        <button type="submit" id="admin-login-btn"
+          style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; font-size:14px; font-weight:600; color:white; background:#111a4a; border:none; border-radius:7px; padding:11px 20px; cursor:pointer;">
+          Sign in
+        </button>
+      </form>
+      <div style="margin-top:16px; font-size:12.5px; color:#718096; text-align:center;">
+        Razorpay CE 3.0 &bull; Risk Operations Console &nbsp;&bull;&nbsp; Internal Access Only
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       ADMIN DISPUTE QUEUE PAGE
+       ==================================================================== -->
+  <div id="admin-queue-page" style="display:none; flex-direction:column; min-height:calc(100vh - 58px); background:#f6f6f8; font-family:'Inter',system-ui,sans-serif;">
+    <div style="max-width:1200px; margin:0 auto; padding:40px 28px; width:100%;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; gap:16px; flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px; font-weight:600; letter-spacing:.10em; color:#167e6c; text-transform:uppercase; margin-bottom:8px;">RISK OPERATIONS</div>
+          <h1 style="font-size:26px; font-weight:800; color:#111a4a; margin-bottom:6px;">Dispute Operations</h1>
+          <p style="font-size:13.5px; color:#4a5568;">Cases requiring review, evidence analysis, or automated defense.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <input type="text" id="queue-search-input" placeholder="Search case ID, transaction, customer..." oninput="filterQueueTable()" style="padding:8px 14px; font-size:13px; border:1px solid #e2e8f0; border-radius:7px; min-width:260px; outline:none; background:white;" />
+          <button onclick="loadQueue()" style="display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:13px; font-weight:600; color:#4a5568; background:white; border:1px solid #e2e8f0; border-radius:7px; padding:8px 16px; cursor:pointer;">
+            ↻ Refresh
+          </button>
+          <button onclick="resetDemoQueue()" style="display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:13px; font-weight:600; color:#b91c1c; background:#fff5f5; border:1px solid #fed7d7; border-radius:7px; padding:8px 14px; cursor:pointer;" title="Reset queue to 3 initial test cases">
+            ↺ Reset Test Cases
+          </button>
+          <button onclick="adminSignOut()" style="display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:13px; font-weight:500; color:#718096; background:white; border:1px solid #e2e8f0; border-radius:7px; padding:8px 12px; cursor:pointer;">
+            Sign out
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Chips Bar -->
+      <div id="queue-filter-bar" style="display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;">
+        <button class="q-filter-btn active" data-filter="all" onclick="setQueueFilter('all', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #167e6c; background:#167e6c; color:white; cursor:pointer;">All</button>
+        <button class="q-filter-btn" data-filter="new" onclick="setQueueFilter('new', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #e2e8f0; background:white; color:#4a5568; cursor:pointer;">New</button>
+        <button class="q-filter-btn" data-filter="evidence_received" onclick="setQueueFilter('evidence_received', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #e2e8f0; background:white; color:#4a5568; cursor:pointer;">Evidence Received</button>
+        <button class="q-filter-btn" data-filter="analyzing" onclick="setQueueFilter('analyzing', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #e2e8f0; background:white; color:#4a5568; cursor:pointer;">Under Analysis</button>
+        <button class="q-filter-btn" data-filter="awaiting_review" onclick="setQueueFilter('awaiting_review', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #e2e8f0; background:white; color:#4a5568; cursor:pointer;">Awaiting Review</button>
+        <button class="q-filter-btn" data-filter="submitted" onclick="setQueueFilter('submitted', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #e2e8f0; background:white; color:#4a5568; cursor:pointer;">Submitted</button>
+        <button class="q-filter-btn" data-filter="conceded" onclick="setQueueFilter('conceded', this)" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:20px; border:1px solid #e2e8f0; background:white; color:#4a5568; cursor:pointer;">Conceded</button>
+      </div>
+
+      <!-- Queue table -->
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 2px 12px rgba(17,26,74,0.07); overflow:hidden;">
+        <div id="queue-loading" style="text-align:center; padding:48px; color:#718096; font-size:14px;">Loading disputes…</div>
+        <table id="queue-table" style="display:none; width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+              <th style="padding:12px 20px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Case ID</th>
+              <th style="padding:12px 16px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Transaction</th>
+              <th style="padding:12px 16px; text-align:right; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Amount</th>
+              <th style="padding:12px 16px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Reason</th>
+              <th style="padding:12px 16px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Customer</th>
+              <th style="padding:12px 16px; text-align:center; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Evidence</th>
+              <th style="padding:12px 16px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Status</th>
+              <th style="padding:12px 16px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Recommendation</th>
+              <th style="padding:12px 20px; text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; color:#718096; text-transform:uppercase;">Updated</th>
+            </tr>
+          </thead>
+          <tbody id="queue-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MAIN APPLICATION CONTAINER (CENTERED 1340PX)
+       ==================================================================== -->
+  <main class="app-container" id="admin-workflow" style="display:none;">
+
+    <!-- ==================================================================
+         STAGE 01: DISPUTE INTAKE (/dispute/intake)
+         ================================================================== -->
+    <section class="stage-view" id="page-intake" data-step="1">
       
-      <!-- Left Column: Case Intake & Forensics -->
-      <div class="content-card">
-        <div class="card-header-bar">
-          <div>
-            <div class="card-heading">Dispute Intake & Evidence Ingestion</div>
-            <div class="card-subheading">Inbound chargeback notice from card issuing bank</div>
+      <div class="stage-header">
+        <div>
+          <div class="stage-tag">STAGE 01 • CASE REVIEW</div>
+          <h1 class="stage-title">Dispute Intake</h1>
+          <div class="case-status-badge" id="case-status-badge-1">
+            <span class="badge-ref" id="badge-ref-1">CASE pay_98a76b54c3210f</span>
+            <span class="badge-dot-sep">•</span>
+            <span class="badge-state-text" id="badge-state-1"><span class="status-dot dot-draft"></span> Draft</span>
           </div>
-          <span class="status-pill" style="font-size: 10px;">WEBHOOK INGESTED</span>
+          <p class="stage-subtitle">Review the dispute details and customer-submitted evidence before forensic analysis.</p>
         </div>
-
-        <!-- Custom Image Drag & Drop Area -->
-        <div class="dropzone-container" id="dropzone" onclick="document.getElementById('custom-file-input').click()">
-          <div class="dropzone-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-indigo-navy);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          </div>
-          <div class="dropzone-title">Customer Photographic Evidence</div>
-          <div class="dropzone-hint">Click or drag image to test (Extracts real camera EXIF metadata)</div>
-          <input type="file" id="custom-file-input" accept="image/*" style="display: none;" onchange="handleFileSelected(event)">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="btn-outline" onclick="goToQueue()" style="padding:7px 14px; font-size:12.5px; border-radius:6px;">← Back to Dispute Queue</button>
+          <button type="button" class="btn-link-subtle" onclick="resetFormToBlank()">Clear form</button>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label class="form-label">Transaction Reference ID (Razorpay format)</label>
-          <input type="text" id="inp-tx-id" class="form-input" value="pay_98a76b54c3210f">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Customer Dispute Claim (Transcribed from Bank Notice / Support Chat)</label>
-          <textarea id="inp-claim-text" class="form-textarea">The phone screen arrived completely shattered in pieces and unusable.</textarea>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label">Transaction Amount (₹ INR)</label>
-            <input type="number" id="inp-amount" class="form-input" value="119900.00">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Dispute Reason Code</label>
-            <select id="inp-reason" class="form-select">
-              <option value="damaged">damaged</option>
-              <option value="not_received">not_received</option>
-              <option value="fraud">fraud</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Section: Auto-Populated CRM Telemetry -->
-        <div style="background: var(--color-cloud-canvas); border: 1px solid var(--color-silver-lining); border-radius: 6px; padding: 14px; margin-bottom: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 11px; font-weight: 700; color: var(--color-indigo-navy); text-transform: uppercase; letter-spacing: 0.04em;">Customer Risk Profile (Auto-Populated from Merchant CRM)</span>
-            <span class="status-pill" style="font-size: 9px; padding: 2px 6px;">CRM SYNCED</span>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group" style="margin-bottom: 10px;">
-              <label class="form-label" style="font-size: 11px;">Merchant Category</label>
-              <select id="inp-category" class="form-select" style="background: #fff; font-size: 12px;">
-                <option value="electronics">electronics</option>
-                <option value="apparel">apparel</option>
-                <option value="digital_services">digital_services</option>
-                <option value="food_delivery">food_delivery</option>
-              </select>
+      <form id="intake-form" onsubmit="event.preventDefault(); proceedFromIntake();">
+        
+        <!-- Customer Response to Information Request Banner / Card -->
+        <div id="customer-response-alert" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; padding:16px 20px; border-radius:8px; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#16a34a; color:white; font-size:12px; font-weight:800;">✓</span>
+              <span style="font-size:13.5px; font-weight:800; color:#166534; letter-spacing:.02em;">CUSTOMER SUBMITTED REQUESTED EVIDENCE</span>
             </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-              <label class="form-label" style="font-size: 11px;">User Account Age (Days)</label>
-              <input type="number" id="inp-age" class="form-input" style="background: #fff; font-size: 12px;" value="5">
+            <span id="cust-resp-time" style="font-size:12px; color:#15803d; font-weight:600;">Submitted recently</span>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#15803d; letter-spacing:.05em; margin-bottom:4px;">Customer Explanation / Statement:</div>
+            <div id="cust-resp-message" style="font-size:13.5px; color:#14532d; background:white; padding:10px 14px; border-radius:6px; border:1px solid #bbf7d0; line-height:1.5; font-style:italic;">
+              "—"
             </div>
           </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 11px;">Prior Chargeback History (Past 12 Months)</label>
-            <input type="number" id="inp-prior-cb" class="form-input" style="background: #fff; font-size: 12px;" value="4">
+          <div id="cust-resp-evidence-box" style="display:none;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#15803d; letter-spacing:.05em; margin-bottom:4px;">New Supplemental Evidence Attached:</div>
+            <div style="display:flex; align-items:center; gap:14px; background:white; padding:10px 14px; border-radius:6px; border:1px solid #bbf7d0;">
+              <img id="cust-resp-img" src="" alt="Supplemental Evidence" style="width:72px; height:72px; object-fit:contain; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; cursor:pointer;" onclick="openImageInViewer(this.src)" />
+              <div>
+                <div id="cust-resp-filename" style="font-size:13px; font-weight:700; color:#111a4a;">filename.jpg</div>
+                <div id="cust-resp-filesize" style="font-size:11.5px; color:#718096; margin-top:2px;">Supplemental document submitted by buyer</div>
+                <button type="button" class="btn-link" onclick="openImageInViewer(document.getElementById('cust-resp-img').src)" style="font-size:12px; margin-top:4px; padding:0; background:none; border:none; color:#167e6c; text-decoration:underline; cursor:pointer;">View full size image →</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="evidence-preview-wrap">
-          <div class="form-label" style="text-align: left; margin-bottom: 8px;">Active Photographic Evidence</div>
-          <img id="evidence-img" class="evidence-img-preview" src="/data/test_samples/intact_phone.jpg" alt="Evidence Preview">
-          <span id="evidence-caption" style="font-size: 11px; color: var(--color-steel); font-family: var(--font-mono);">data/test_samples/intact_phone.jpg</span>
+        <!-- Pending Request Banner (shown when info is requested but customer hasn't responded yet) -->
+        <div id="customer-pending-req-alert" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-left:4px solid #f59e0b; padding:14px 18px; border-radius:8px; margin-bottom:20px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">⌛</span>
+            <span style="font-size:13px; font-weight:700; color:#92400e;" id="pending-req-title">Awaiting Customer Response</span>
+          </div>
+          <div style="font-size:12.5px; color:#78350f; margin-top:4px;" id="pending-req-message">An information request was sent to the buyer. This dispute is in 'Waiting for Customer' status.</div>
         </div>
 
-        <button class="btn-accent-orange" id="btn-run-agent" onclick="executeDefensePipeline()">
-          <span>Execute Evidence Pipeline</span>
+        <!-- PRIMARY WORKSPACE (ROW 1: EVIDENCE UPLOAD & TRANSACTION DETAILS) -->
+        <div class="grid-2col">
+          
+          <!-- LEFT: PRIMARY FOCUS — PHOTOGRAPHIC EVIDENCE UPLOAD -->
+          <div class="col-primary-upload">
+            <div class="card card-primary-upload">
+              <div class="card-title-bar">
+                <div>
+                  <h2 class="card-heading" id="upload-card-heading">Upload photographic evidence</h2>
+                  <p class="card-subheading" id="upload-card-subheading">Primary buyer photograph submitted with the dispute claim</p>
+                </div>
+                <span class="tag-required" id="upload-required-tag">Required</span>
+              </div>
+
+              <!-- Customer-submitted evidence panel (shown when case is loaded from API) -->
+              <div id="customer-evidence-panel" style="display:none; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                  <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:20px; padding:3px 10px;">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Evidence Received
+                  </span>
+                  <span style="font-size:11px; color:#718096;">Source: Customer Submitted</span>
+                </div>
+                <div style="border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#f8fafc;">
+                  <img id="customer-evidence-img" src="" alt="Customer-submitted evidence" style="width:100%; max-height:320px; object-fit:contain; display:block;" />
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px;">
+                  <div>
+                    <span style="font-size:12px; font-weight:600; color:#111a4a;" id="customer-evidence-name">evidence.jpg</span>
+                    <span style="font-size:11.5px; color:#718096; margin-left:8px;" id="customer-evidence-size"></span>
+                  </div>
+                  <span style="font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:3px 9px;">Read-only</span>
+                </div>
+              </div>
+
+              <!-- Admin: evidence upload is NOT available. Evidence comes from customer submission only. -->
+              <div id="no-evidence-placeholder" style="display:none; padding:32px; text-align:center; background:#f8fafc; border:2px dashed #e2e8f0; border-radius:10px;">
+                <div style="font-size:28px; margin-bottom:10px;">📭</div>
+                <div style="font-size:13px; font-weight:600; color:#4a5568;">No evidence submitted yet</div>
+                <div style="font-size:12px; color:#718096; margin-top:4px;">The customer has not uploaded evidence for this case.</div>
+              </div>
+
+              <div class="upload-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Evidence will be checked for visual consistency and metadata integrity.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: TRANSACTION & CLAIM DETAILS -->
+          <div class="col-transaction-details">
+            <div class="card card-details">
+              <div class="card-title-bar">
+                <div>
+                  <h2 class="card-heading">Transaction &amp; Claim Details</h2>
+                  <p class="card-subheading">Dispute classification and customer dispute statement</p>
+                </div>
+              </div>
+
+              <div class="form-layout">
+                <div class="field-row-2col">
+                  <div class="form-field">
+                    <label for="inp-customer-id" class="input-label">Customer Reference ID</label>
+                    <input type="text" id="inp-customer-id" class="input-control font-mono" readonly style="background:#f8fafc; color:#334155; font-weight:600;" value="—">
+                  </div>
+                  <div class="form-field">
+                    <label for="inp-customer-email" class="input-label">Customer Email</label>
+                    <input type="text" id="inp-customer-email" class="input-control font-mono" readonly style="background:#f8fafc; color:#334155;" value="—">
+                  </div>
+                </div>
+
+                <div class="field-row-2col">
+                  <div class="form-field">
+                    <label for="inp-tx-id" class="input-label">Transaction Reference ID <span class="req">*</span></label>
+                    <input type="text" id="inp-tx-id" class="input-control font-mono" value="pay_98a76b54c3210f" placeholder="pay_..." required oninput="validateIntakeForm()">
+                  </div>
+
+                  <div class="form-field">
+                    <label for="inp-amount" class="input-label">Dispute Amount (INR ₹) <span class="req">*</span></label>
+                    <div class="currency-input-wrapper">
+                      <span class="currency-sym">₹</span>
+                      <input type="number" id="inp-amount" class="input-control font-mono" value="119900.00" step="0.01" min="1" required oninput="validateIntakeForm()">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="inp-reason" class="input-label">Dispute Reason Code <span class="req">*</span></label>
+                  <select id="inp-reason" class="input-control" required>
+                    <option value="damaged">Damaged or Defective Goods (Visa Code 13.3 / CE 3.0)</option>
+                    <option value="not_received">Item Not Received / Non-Receipt (Visa Code 13.1)</option>
+                    <option value="fraud">Fraudulent / Unauthorized Charge (Visa Code 10.4)</option>
+                    <option value="not_as_described">Significantly Not as Described (Visa Code 13.3)</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label for="inp-claim-text" class="input-label">Customer Dispute Claim Statement <span class="req">*</span></label>
+                  <textarea id="inp-claim-text" class="input-control textarea-control" rows="3" placeholder="Enter customer's submitted narrative..." required oninput="validateIntakeForm()">The phone screen arrived completely shattered in pieces and unusable.</textarea>
+                  <span class="input-hint">Exact statement filed with issuing bank; tested for pixel contradictions.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SECONDARY WORKSPACE (ROW 2: CUSTOMER PROFILE & DEFENSE POLICY / READINESS) -->
+        <div class="grid-2col">
+          
+          <!-- LEFT: MERCHANT RISK PROFILE -->
+          <div class="col-customer-profile">
+            <div class="card card-crm">
+              <div class="card-title-bar">
+                <div>
+                  <h3 class="card-heading-sm">Merchant Risk Profile</h3>
+                  <p class="card-subheading">Account-level risk telemetry synced from CRM / payment systems</p>
+                </div>
+                <span class="tag-synced">● CRM Synced</span>
+              </div>
+
+              <div class="crm-grid">
+                <div class="form-field">
+                  <label for="inp-category" class="input-label">Merchant Category</label>
+                  <select id="inp-category" class="input-control" required>
+                    <option value="electronics">Electronics (High-Ticket)</option>
+                    <option value="apparel">Apparel &amp; Footwear</option>
+                    <option value="digital_services">Digital Services</option>
+                    <option value="travel">Travel &amp; Airlines</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label for="inp-age" class="input-label">Account Age (Days)</label>
+                  <input type="number" id="inp-age" class="input-control font-mono" value="5" min="0" required>
+                  <span class="input-hint" id="hint-age">Burner account risk (&lt;14 days)</span>
+                </div>
+
+                <div class="form-field">
+                  <label for="inp-prior-cb" class="input-label">Prior Chargebacks</label>
+                  <input type="number" id="inp-prior-cb" class="input-control font-mono" value="4" min="0" required>
+                  <span class="input-hint hint-warning" id="hint-prior-cb">4 prior disputes filed</span>
+                </div>
+              </div>
+
+              <div class="customer-trust-footer">
+                <span class="trust-label">CRM Risk Assessment:</span>
+                <span class="trust-status" id="trust-summary-text">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  High Risk (Short Tenure + Repeat Disputes)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: DEFENSE POLICY & CASE READINESS -->
+          <div class="col-policy-readiness">
+            <div class="card card-defense-policy-readiness">
+              
+              <!-- Top: Compact Defense Policy -->
+              <div class="policy-subcard">
+                <div class="policy-header-row">
+                  <h3 class="card-heading-sm">Defense Policy</h3>
+                  <span class="policy-badge">85% Auto-Contest Threshold</span>
+                </div>
+                <p class="policy-body">
+                  Cases with calibrated win probability &ge;85% qualify for automated contest under Visa CE 3.0 rules, balancing expected recovery against penalty fees.
+                </p>
+                <button type="button" class="btn-policy-link" onclick="openModal('policy-modal')">
+                  <span>Why 85%? View Cost Matrix &amp; Rationale</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+
+              <div class="card-divider"></div>
+
+              <!-- Bottom: Case Readiness Checklist -->
+              <div class="readiness-subcard">
+                <h3 class="card-heading-sm">Case Readiness</h3>
+                <ul class="readiness-list">
+                  <li class="readiness-item" id="ready-tx-item">
+                    <span class="check-dot checked">✓</span>
+                    <span>Transaction reference &amp; amount</span>
+                  </li>
+                  <li class="readiness-item" id="ready-claim-item">
+                    <span class="check-dot checked">✓</span>
+                    <span>Customer claim narrative</span>
+                  </li>
+                  <li class="readiness-item" id="ready-evidence-item">
+                    <span class="check-dot checked" id="ready-evidence-dot">✓</span>
+                    <span id="ready-evidence-text">Evidence photo attached</span>
+                  </li>
+                  <li class="readiness-item" id="ready-status-item">
+                    <span class="check-dot checked" id="ready-status-dot">✓</span>
+                    <span id="ready-status-text">Ready for evidence analysis</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BOTTOM ACTION FOOTER BAR -->
+        <div class="intake-action-footer">
+          <div class="footer-case-summary">
+            <span>Target Dispute:</span>
+            <span class="summary-pill" id="footer-case-pill">pay_98a76b54c3210f (₹119,900.00)</span>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-to-analysis" disabled>
+            <span>Continue to Evidence Analysis</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+
+    <!-- ==================================================================
+         STAGE 02: MULTIMODAL EVIDENCE ANALYSIS (/dispute/evidence-analysis)
+         ================================================================== -->
+    <section class="stage-view hidden" id="page-evidence" data-step="2">
+      
+      <div class="stage-header">
+        <div>
+          <div class="stage-tag">STAGE 02 • FORENSIC PERCEPTION COUNCIL</div>
+          <h1 class="stage-title">Multimodal Evidence Analysis</h1>
+          <div class="case-status-badge" id="case-status-badge-2">
+            <span class="badge-ref" id="badge-ref-2">CASE pay_98a76b54c3210f</span>
+            <span class="badge-dot-sep">•</span>
+            <span class="badge-state-text" id="badge-state-2"><span class="status-dot dot-active"></span> Analysis Complete</span>
+          </div>
+          <p class="stage-subtitle">What does the uploaded evidence actually show? Visual contradiction scan and camera EXIF telemetry.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="btn-outline" onclick="goToQueue()" style="padding:7px 14px; font-size:12.5px; border-radius:6px;">← Back to Dispute Queue</button>
+          <button type="button" class="btn-outline" onclick="retriggerAnalysis()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Re-run Analysis</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Processing State Banner -->
+      <div class="processing-banner" id="analysis-processing-state">
+        <div class="spinner"></div>
+        <div class="banner-text">
+          <div class="banner-title" id="analysis-step-title">Analyzing evidence with Gemini 3.6 Flash VLM...</div>
+          <div class="banner-desc" id="analysis-step-sub">Scanning visual pixels, checking surface integrity, and parsing EXIF camera metadata.</div>
+        </div>
+      </div>
+
+      <!-- 2-Column Workspace -->
+      <div class="grid-2col" id="analysis-results-workspace">
+        
+        <!-- LEFT: Large Evidence Inspector -->
+        <div class="col-evidence-viewer">
+          <div class="card card-viewer">
+            <div class="viewer-top-bar">
+              <div class="viewer-tag-group">
+                <span class="viewer-badge">EVIDENCE VIEWER</span>
+                <span class="viewer-dim-info" id="viewer-img-dims">1920 × 1080 px</span>
+              </div>
+              <div class="viewer-tools">
+                <button type="button" class="btn-tool" onclick="zoomEvidence(-0.2)" title="Zoom Out">-</button>
+                <span class="zoom-indicator" id="zoom-text">100%</span>
+                <button type="button" class="btn-tool" onclick="zoomEvidence(0.2)" title="Zoom In">+</button>
+                <button type="button" class="btn-tool" onclick="resetEvidenceZoom()">Reset</button>
+                <button type="button" class="btn-tool" onclick="openModal('fullscreen-evidence-modal')" title="Inspect Fullscreen">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="evidence-viewport" id="image-viewport">
+              <img id="evidence-viewer-img" src="" alt="Evidence Under Forensic Inspection">
+            </div>
+
+            <!-- EXIF Card -->
+            <div class="exif-telemetry-box">
+              <div class="exif-box-header">
+                <span class="box-heading">CAMERA &amp; EXIF TELEMETRY</span>
+                <span class="status-chip" id="exif-badge-status">PENDING</span>
+              </div>
+              <div class="exif-data-grid">
+                <div class="exif-row">
+                  <span class="exif-key">Device / Camera:</span>
+                  <span class="exif-value" id="exif-camera-val">—</span>
+                </div>
+                <div class="exif-row">
+                  <span class="exif-key">Capture Timestamp:</span>
+                  <span class="exif-value font-mono" id="exif-timestamp-val">—</span>
+                </div>
+                <div class="exif-row">
+                  <span class="exif-key">GPS Coordinates:</span>
+                  <span class="exif-value font-mono" id="exif-gps-val">—</span>
+                </div>
+                <div class="exif-row">
+                  <span class="exif-key">Metadata Assessment:</span>
+                  <span class="exif-value" id="exif-delivery-match-val">Pending Analysis</span>
+                </div>
+              </div>
+              <div style="font-size:11.5px; color:#718096; border-top:1px solid #e2e8f0; margin-top:10px; padding-top:8px; line-height:1.4;" id="exif-disclaimer-note">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Findings & Narrative -->
+        <div class="col-findings">
+          
+          <div class="card card-findings">
+            <div class="card-title-bar">
+              <h2 class="card-heading">Visual Evidence Assessment</h2>
+              <span class="status-chip hidden" id="vlm-contradiction-pill">PENDING</span>
+            </div>
+
+            <div class="findings-list">
+              <div class="finding-item">
+                <span class="finding-name">Claim vs. Pixel Contradiction</span>
+                <span class="finding-val" id="finding-contradiction-val">Pending Analysis</span>
+              </div>
+              <div class="finding-item">
+                <span class="finding-name">Physical Damage Assessment</span>
+                <span class="finding-val" id="finding-damage-val">Pending Analysis</span>
+              </div>
+              <div class="finding-item">
+                <span class="finding-name">Visual Confidence Score</span>
+                <span class="finding-val font-mono" id="finding-confidence-val">—</span>
+              </div>
+              <div class="finding-item">
+                <span class="finding-name">Perception Council</span>
+                <span class="finding-val">Gemini 3.6 Flash + Groq Vision Failover</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VLM Rationale -->
+          <div class="card card-rationale">
+            <div class="card-title-bar">
+              <h2 class="card-heading">VLM Forensic Rationale</h2>
+              <span class="badge-engine">Gemini 3.6 Flash</span>
+            </div>
+            <div class="narrative-box">
+              <p class="narrative-body" id="vlm-rationale-text" style="color:#718096;">
+                Photographic evidence has not been analyzed yet. Run analysis to evaluate claim against visual pixels.
+              </p>
+            </div>
+          </div>
+
+          <!-- CE 3.0 Checklist -->
+          <div class="card card-checklist">
+            <h3 class="card-heading-sm">CE 3.0 Evidentiary Checklist</h3>
+            <ul class="checklist-items">
+              <li class="check-entry">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Photographic evidence resolves edge gradients without compression anomalies</span>
+              </li>
+              <li class="check-entry">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Camera EXIF telemetry correlates with merchant delivery dispatch window</span>
+              </li>
+              <li class="check-entry">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Dispute reason code 'damaged' challenged with physical pixel proof</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="workflow-footer-nav">
+        <button type="button" class="btn-outline" onclick="navigateToStep(1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Back to Intake</span>
+        </button>
+
+        <button type="button" class="btn-primary" onclick="navigateToStep(3)">
+          <span>Continue to Risk Assessment</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
 
-      <!-- Right Column: Decision Engine & Razorpay CE 3.0 -->
-      <div>
-        
-        <!-- Decision Status Banner Card -->
-        <div class="decision-status-card auto-contest" id="decision-banner">
-          <div>
-            <div class="decision-status-label" id="decision-tier-label">ROUTING TIER: AUTO-CONTEST (SCORE > 85%)</div>
-            <div class="decision-status-heading" id="decision-action-label">SUBMITTED TO RAZORPAY API</div>
-          </div>
-          <div style="text-align: right;">
-            <div class="decision-status-label">Win Probability</div>
-            <div class="win-prob-metric" id="decision-prob-value">99.1%</div>
-          </div>
-        </div>
+    </section>
 
-        <!-- Layer 1 Forensics Box -->
-        <div class="forensics-box">
-          <div class="card-header-bar" style="border-bottom: none; margin-bottom: 8px; padding-bottom: 0;">
-            <div class="card-heading" style="font-size: 14px;">Layer 1 // Multimodal Forensic Analysis</div>
-            <span style="font-size: 11px; font-family: var(--font-mono); color: var(--color-steel);">GEMINI 3.6 FLASH</span>
-          </div>
 
-          <div class="forensics-meta-grid">
-            <div class="forensics-meta-item">
-              <div class="forensics-meta-lbl">Visual Contradiction</div>
-              <div class="forensics-meta-val" id="stat-vlm-contradiction" style="color: #dc2626;">TRUE (CONTRADICTION DETECTED)</div>
-            </div>
-            <div class="forensics-meta-item">
-              <div class="forensics-meta-lbl">EXIF Telemetry</div>
-              <div class="forensics-meta-val" id="stat-exif-match">FALSE (EXIF STRIPPED)</div>
-            </div>
-          </div>
-
-          <div class="forensics-rationale-bubble">
-            <strong style="font-size: 11px; text-transform: uppercase; color: var(--color-steel); display: block; margin-bottom: 4px;">VLM Forensic Rationale:</strong>
-            <p id="stat-vlm-rationale" style="color: var(--color-indigo-navy); font-weight: 500;">
-              The provided image shows a fully intact screen with no cracks or visual damage, directly contradicting the customer's claim that it arrived shattered.
-            </p>
-          </div>
-        </div>
-
-        <!-- Layer 2 Explainable AI (XAI) SHAP Feature Impacts -->
-        <div class="shap-drivers-box">
-          <div class="card-header-bar" style="border-bottom: none; margin-bottom: 8px; padding-bottom: 0;">
-            <div>
-              <div class="card-heading" style="font-size: 14px;">Layer 2 // CatBoost Explainable AI (XAI) Drivers</div>
-              <div style="font-size: 11px; color: var(--color-steel); margin-top: 2px;">Feature-level attribution for calibrated win probability</div>
-            </div>
-            <span style="font-size: 11px; font-family: var(--font-mono); color: var(--color-steel);">SHAP TREE-EXPLAINER</span>
-          </div>
-          <div id="shap-drivers-list" style="margin-top: 8px;">
-            <!-- Populated dynamically with human-readable cards and impact bars -->
-          </div>
-        </div>
-
-        <!-- Layer 3 Action Strategy & Razorpay CE 3.0 Package -->
-        <div class="content-card" style="padding: 20px; margin-bottom: 20px;">
-          <div class="card-header-bar" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
-            <div>
-              <div class="card-heading" style="font-size: 14px;">Layer 3 // Action Strategy & Unit Economics</div>
-              <div style="font-size: 11px; color: var(--color-steel);" id="action-strategy-subtitle">Financial rationale and CE 3.0 submission details</div>
-            </div>
-          </div>
-
-          <!-- Plain-English Financial Strategy Summary Box -->
-          <div id="strategy-explanation-box" style="background: var(--color-cloud-canvas); border: 1px solid var(--color-silver-lining); border-radius: var(--radius-cards); padding: 16px; margin-bottom: 16px;">
-            <!-- Rendered by JS -->
-          </div>
-
-          <!-- CE 3.0 JSON Code Box (Collapsible / Viewable) -->
-          <div class="code-block-wrap">
-            <div class="code-header-bar">
-              <span class="code-title">Razorpay CE 3.0 Submission Payload</span>
-              <button class="btn-copy-code" id="copy-payload-btn" onclick="copyPayload()">Copy JSON</button>
-            </div>
-            <pre class="code-content" id="payload-code-box">Loading submission payload...</pre>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ====================================================================
-       TAB 2: RISK POLICY & THRESHOLD COST MATRIX
-       ==================================================================== -->
-  <section id="tab-threshold" class="hidden-section">
-    <div class="matrix-container" style="padding-top: 32px;">
-      <div class="hero-title-row">
+    <!-- ==================================================================
+         STAGE 03: RISK & STATISTICAL ASSESSMENT (/dispute/risk-assessment)
+         ================================================================== -->
+    <section class="stage-view hidden" id="page-risk" data-step="3">
+      
+      <div class="stage-header">
         <div>
-          <h1 class="hero-main-title">Risk Policy & Quantitative Threshold Justification</h1>
-          <p class="hero-subtitle">Mathematical proof for the 0.85 auto-contest threshold derived from the asymmetric dispute penalty matrix.</p>
+          <div class="stage-tag">STAGE 03 • STATISTICAL GATEKEEPER</div>
+          <h1 class="stage-title">Risk &amp; Statistical Assessment</h1>
+          <div class="case-status-badge" id="case-status-badge-3">
+            <span class="badge-ref" id="badge-ref-3">CASE pay_98a76b54c3210f</span>
+            <span class="badge-dot-sep">•</span>
+            <span class="badge-state-text" id="badge-state-3"><span class="status-dot dot-active"></span> Risk Evaluated</span>
+          </div>
+          <p class="stage-subtitle">How confident is the automated decision? Calibrated CatBoost ML classification, 85% policy threshold margin, and SHAP feature attribution.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="btn-outline" onclick="goToQueue()" style="padding:7px 14px; font-size:12.5px; border-radius:6px;">← Back to Dispute Queue</button>
+          <button type="button" class="btn-outline" onclick="openModal('policy-modal')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span>View Cost Matrix &amp; Optimization Data</span>
+          </button>
         </div>
       </div>
 
-      <div class="content-card" style="margin-top: 24px;">
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--color-indigo-navy); margin-bottom: 8px;">The Asymmetric Financial Risk Problem</h3>
-        <p style="color: var(--color-slate-ink); line-height: 1.7; font-size: 13px;">
-          Contesting an illegitimate chargeback carries an asymmetric financial penalty:
-          <strong>A lost dispute incurs a non-refundable ₹1,500 card network penalty fee</strong> in addition to the lost merchandise value.
-          Conversely, manual human review incurs a labor triage cost of ~₹200.
-          The empirical table below demonstrates that setting the automated submission threshold at <strong>0.85</strong> maximizes net recovered merchant capital while keeping false-positive dispute loss fees below 5%.
+      <!-- AUTO-CONTEST POLICY & THRESHOLD MARGIN CARD -->
+      <div class="card card-policy-threshold">
+        <div class="card-title-bar">
+          <div>
+            <h2 class="card-heading">Auto-Contest Policy &amp; Threshold Evaluation</h2>
+            <p class="card-subheading">Evaluating dispute win probability against calibrated operational risk boundary</p>
+          </div>
+          <span class="status-chip" id="risk-policy-status-tag">PENDING ANALYSIS</span>
+        </div>
+
+        <div class="policy-threshold-grid">
+          <div class="threshold-metric-block">
+            <span class="threshold-metric-label">Auto-Contest Policy Threshold</span>
+            <span class="threshold-metric-val">85.0%</span>
+            <span class="threshold-metric-sub">Calibrated break-even threshold</span>
+          </div>
+
+          <div class="threshold-metric-block">
+            <span class="threshold-metric-label">Current Case Win Probability</span>
+            <span class="threshold-metric-val" id="risk-policy-prob-val">—</span>
+            <span class="threshold-metric-sub">CatBoost calibrated classification</span>
+          </div>
+
+          <div class="threshold-metric-block">
+            <span class="threshold-metric-label">Margin Above Policy Boundary</span>
+            <span class="threshold-metric-val" id="risk-policy-margin-val">—</span>
+            <span class="threshold-metric-sub">Safety margin for auto-submission</span>
+          </div>
+        </div>
+
+        <p class="policy-rationale-text">
+          <strong>Why 85%?</strong> Cases with calibrated win probability &ge;85% qualify for automated contest under the configured dispute policy. The threshold is calibrated against expected recovery and the financial cost of unsuccessful contests (avoiding the non-refundable ₹1,500 dispute penalty fee).
         </p>
 
-        <table class="matrix-table" id="cost-matrix-table">
-          <thead>
-            <tr>
-              <th>Threshold</th>
-              <th>Auto-Contest Volume</th>
-              <th>Precision (Win Rate)</th>
-              <th>False Positives (Lost Fees)</th>
-              <th>Net Financial Impact (₹ INR)</th>
-              <th>Policy Status</th>
-            </tr>
-          </thead>
-          <tbody id="cost-matrix-tbody">
-            <!-- Populated dynamically -->
-          </tbody>
-        </table>
+        <button type="button" class="btn-outline" onclick="openModal('policy-modal')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>View Full Cost Matrix &amp; Optimization Data →</span>
+        </button>
       </div>
-    </div>
-  </section>
 
-  <!-- ====================================================================
-       TAB 3: HUMAN-IN-THE-LOOP ANALYST QUEUE
-       ==================================================================== -->
-  <section id="tab-queue" class="hidden-section">
-    <div class="matrix-container" style="padding-top: 32px;">
-      <div class="hero-title-row">
-        <div>
-          <h1 class="hero-main-title">Priority Analyst Review Queue</h1>
-          <p class="hero-subtitle">Human-in-the-loop triage inbox for borderline disputes (60% – 85% confidence band).</p>
+      <!-- Decision Summary Card -->
+      <div class="card card-decision-summary" id="risk-summary-bar">
+        <div class="decision-group">
+          <span class="decision-label">RECOMMENDED ROUTING</span>
+          <div class="routing-badge" id="risk-routing-badge">
+            <span class="dot-indicator"></span>
+            <span id="risk-routing-tier-text">PENDING</span>
+          </div>
+        </div>
+
+        <div class="decision-divider"></div>
+
+        <div class="decision-group">
+          <span class="decision-label">CALIBRATED WIN PROBABILITY</span>
+          <div class="win-prob-display">
+            <span class="win-prob-val" id="risk-prob-num">—</span>
+            <span class="win-prob-tag" id="risk-prob-tag">Awaiting ML Risk Evaluation</span>
+          </div>
         </div>
       </div>
 
-      <div class="queue-table-wrap">
-        <table class="queue-table">
-          <thead>
-            <tr>
-              <th>Dispute ID</th>
-              <th>Transaction ID</th>
-              <th>Amount</th>
-              <th>Reason</th>
-              <th>Win Probability</th>
-              <th>VLM Status</th>
-              <th>EXIF Metadata</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="analyst-queue-tbody">
-            <!-- Populated dynamically -->
-          </tbody>
-        </table>
+      <!-- Model Metrics Grid -->
+      <div class="metrics-tiles-grid">
+        <div class="metric-tile">
+          <span class="tile-label">CatBoost Gatekeeper Score</span>
+          <span class="tile-value font-mono" id="stat-gatekeeper-score">—</span>
+          <span class="tile-caption">Calibrated probability output</span>
+        </div>
+
+        <div class="metric-tile">
+          <span class="tile-label">ROC-AUC Benchmark</span>
+          <span class="tile-value font-mono">0.9529</span>
+          <span class="tile-caption">Validated on held-out test data</span>
+        </div>
+
+        <div class="metric-tile">
+          <span class="tile-label">Brier Calibration Score</span>
+          <span class="tile-value font-mono text-success">0.0579</span>
+          <span class="tile-caption">Target &lt; 0.10 for financial APIs</span>
+        </div>
+
+        <div class="metric-tile">
+          <span class="tile-label">Optimal Policy Threshold</span>
+          <span class="tile-value font-mono">0.8500</span>
+          <span class="tile-caption">Maximizes net recovered capital</span>
+        </div>
+      </div>
+
+      <!-- Explainable AI (XAI) Ranked Drivers Table -->
+      <div class="card card-xai">
+        <div class="card-title-bar">
+          <div>
+            <h2 class="card-heading">Explainable AI (XAI) Feature Attribution</h2>
+            <p class="card-subheading">Ranked contribution per feature computed dynamically via shap.TreeExplainer</p>
+          </div>
+          <span class="status-chip">SHAP TreeExplainer</span>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 28%;">Feature Factor</th>
+                <th style="width: 14%;">Contribution</th>
+                <th style="width: 22%;">Impact Direction</th>
+                <th style="width: 36%;">Operational Rationale</th>
+              </tr>
+            </thead>
+            <tbody id="xai-drivers-tbody">
+              <!-- Dynamically populated via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="workflow-footer-nav">
+        <button type="button" class="btn-outline" onclick="navigateToStep(2)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Back to Evidence Analysis</span>
+        </button>
+
+        <button type="button" class="btn-primary" onclick="navigateToStep(4)">
+          <span>Continue to Analyst Review</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- ==================================================================
+         STAGE 04: ANALYST REVIEW WORKSPACE (/dispute/review)
+         ================================================================== -->
+    <section class="stage-view hidden" id="page-review" data-step="4">
+      
+      <div class="stage-header">
+        <div>
+          <div class="stage-tag">STAGE 04 • HUMAN-IN-THE-LOOP TRIAGE</div>
+          <h1 class="stage-title">Analyst Review &amp; Decision Validation</h1>
+          <div class="case-status-badge" id="case-status-badge-4">
+            <span class="badge-ref" id="badge-ref-4">CASE pay_98a76b54c3210f</span>
+            <span class="badge-dot-sep">•</span>
+            <span class="badge-state-text" id="badge-state-4"><span class="status-dot dot-warning"></span> Awaiting Review</span>
+          </div>
+          <p class="stage-subtitle">Do I agree with the recommendation? Review case dossier, inspect evidence, and authorize defense action.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="btn-outline" onclick="goToQueue()" style="padding:7px 14px; font-size:12.5px; border-radius:6px;">← Back to Dispute Queue</button>
+          <div class="review-status-tag" id="review-signoff-badge">
+            <span class="status-dot"></span>
+            <span id="review-signoff-text">Awaiting Determination</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        
+        <!-- LEFT: Case Dossier & Evidence Summary -->
+        <div class="col-dossier">
+          
+          <div class="card card-dossier">
+            <h2 class="card-heading">Case Dossier Summary</h2>
+            <div class="dossier-grid">
+              <div class="dossier-cell">
+                <span class="cell-label">Transaction ID</span>
+                <span class="cell-val font-mono" id="rev-tx-id">pay_98a76b54c3210f</span>
+              </div>
+              <div class="dossier-cell">
+                <span class="cell-label">Dispute Amount</span>
+                <span class="cell-val font-mono font-bold" id="rev-amount">₹119,900.00</span>
+              </div>
+              <div class="dossier-cell">
+                <span class="cell-label">Dispute Reason</span>
+                <span class="cell-val" id="rev-reason">Damaged Goods (Visa 13.3)</span>
+              </div>
+              <div class="dossier-cell">
+                <span class="cell-label">Customer Statement</span>
+                <span class="cell-val italic" id="rev-claim">"The phone screen arrived completely shattered in pieces and unusable."</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-thumb-evidence">
+            <div class="card-title-bar">
+              <h3 class="card-heading-sm">Evidence Snapshot</h3>
+              <button type="button" class="link-btn" onclick="openModal('fullscreen-evidence-modal')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+                <span>Inspect Full Evidence</span>
+              </button>
+            </div>
+            <div class="thumb-container" onclick="openModal('fullscreen-evidence-modal')">
+              <img id="rev-evidence-thumb" src="" alt="Evidence Thumbnail">
+              <div class="thumb-hint">Click to enlarge</div>
+            </div>
+          </div>
+
+          <div class="card card-recap">
+            <h3 class="card-heading-sm">Automated Findings Recap</h3>
+            <ul class="recap-entries">
+              <li>
+                <span class="entry-label">Visual Contradiction:</span>
+                <span class="entry-value" id="rev-contradiction">Pending Analysis</span>
+              </li>
+              <li>
+                <span class="entry-label">Camera EXIF Telemetry:</span>
+                <span class="entry-value" id="rev-exif">Pending Analysis</span>
+              </li>
+              <li>
+                <span class="entry-label">VLM Council Assessment:</span>
+                <span class="entry-value" id="rev-vlm-note">Awaiting visual evidence analysis.</span>
+              </li>
+              <li>
+                <span class="entry-label">Top XAI Driver:</span>
+                <span class="entry-value font-mono" id="rev-top-driver">—</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Decision & Action Authorization -->
+        <div class="col-decision">
+          
+          <div class="card card-recommendation" id="rev-rec-box">
+            <div class="rec-title-row">
+              <span class="rec-label-text">SYSTEM RECOMMENDATION</span>
+              <div class="rec-status-pill" id="rev-rec-pill">PENDING</div>
+            </div>
+            <div class="rec-content">
+              <div class="rec-stat-row">
+                <span class="stat-label">Projected Win Probability:</span>
+                <span class="stat-value font-mono font-bold" id="rev-win-prob">—</span>
+              </div>
+              <p class="rec-explanation" id="rev-rec-rationale">
+                Run analysis to generate automated recommendation.
+              </p>
+            </div>
+          </div>
+
+          <div class="card card-action-station">
+            <h2 class="card-heading">Analyst Determination</h2>
+            <p class="action-caption">Select operational determination to validate and proceed:</p>
+
+            <div class="determination-options">
+              
+              <!-- Approve -->
+              <button type="button" class="determination-card" id="btn-decide-approve" onclick="selectAnalystAction('APPROVE')">
+                <div class="radio-indicator"></div>
+                <div class="option-text">
+                  <span class="option-title" id="btn-approve-title">Approve Recommendation</span>
+                  <span class="option-desc" id="btn-approve-desc">Accept the system recommendation and proceed with case determination.</span>
+                </div>
+              </button>
+
+              <!-- Override -->
+              <button type="button" class="determination-card" id="btn-decide-override" onclick="selectAnalystAction('OVERRIDE')">
+                <div class="radio-indicator"></div>
+                <div class="option-text">
+                  <span class="option-title">Override System Recommendation</span>
+                  <span class="option-desc">Manually alter routing to Concede Liability or Manual Dispute.</span>
+                </div>
+              </button>
+
+              <!-- Request Evidence -->
+              <button type="button" class="determination-card" id="btn-decide-evidence" onclick="selectAnalystAction('REQUEST_EVIDENCE')">
+                <div class="radio-indicator"></div>
+                <div class="option-text">
+                  <span class="option-title">Request Additional Merchant Evidence</span>
+                  <span class="option-desc" id="btn-evidence-desc">Request supporting documentation such as proof of delivery, dispatch records, packing evidence, or other merchant-side documentation.</span>
+                </div>
+              </button>
+
+            </div>
+
+            <!-- Override Sub-panel -->
+            <div class="sub-action-panel hidden" id="override-details-panel">
+              <div class="form-field">
+                <label for="sel-override-action" class="input-label">Select Override Strategy <span class="req">*</span></label>
+                <select id="sel-override-action" class="input-control">
+                  <option value="CONCEDE">Concede Liability (Avoid ₹1,500 Dispute Penalty Fee)</option>
+                  <option value="MANUAL_CONTEST">Manual Contest with Custom Evidence</option>
+                  <option value="REQUEST_INFO">Request Clarification from Buyer</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label for="txt-override-reason" class="input-label">Override Justification (Required for Audit Trail) <span class="req">*</span></label>
+                <textarea id="txt-override-reason" class="input-control textarea-control" rows="3" placeholder="State operational reason for overriding recommendation..."></textarea>
+              </div>
+            </div>
+
+            <!-- Evidence Request Sub-panel -->
+            <div class="sub-action-panel hidden" id="evidence-req-panel">
+              <div class="form-field">
+                <label for="sel-evidence-type" class="input-label">Requested Document Type</label>
+                <select id="sel-evidence-type" class="input-control">
+                  <option value="POD">Courier Physical Signature &amp; Proof of Delivery (POD)</option>
+                  <option value="PACKING_VIDEO">Warehouse CCTV / Packing Dispatch Video</option>
+                  <option value="SERIAL_LOG">Device Serial / IMEI Activation Log</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="txt-evidence-note" class="input-label">Analyst Note to Merchant Ops</label>
+                <textarea id="txt-evidence-note" class="input-control textarea-control" rows="2" placeholder="Specific requirements for merchant team..."></textarea>
+              </div>
+              <div style="margin-top: 10px;">
+                <button type="button" class="btn-outline" onclick="openModal('modal-request-info')" style="font-size:12px; padding:6px 12px; border-color:#f59e0b; color:#b45309; background:#fffbeb; cursor:pointer;">
+                  💬 Compose Request to Customer Directly
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="workflow-footer-nav">
+        <button type="button" class="btn-outline" onclick="navigateToStep(3)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Back to Risk Assessment</span>
+        </button>
+
+        <button type="button" class="btn-primary" id="btn-to-submission" onclick="proceedToSubmission()" disabled>
+          <span>Continue to Final Action &amp; Resolution</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- ==================================================================
+         STAGE 05: ACTION & SUBMISSION (/dispute/submission)
+         ================================================================== -->
+    <section class="stage-view hidden" id="page-submission" data-step="5">
+      
+      <div class="stage-header">
+        <div>
+          <div class="stage-tag" id="stage-05-tag">STAGE 05 • FINAL ACTION &amp; RESOLUTION</div>
+          <h1 class="stage-title" id="stage-05-title">Final Action &amp; Resolution</h1>
+          <div class="case-status-badge" id="case-status-badge-5">
+            <span class="badge-ref" id="badge-ref-5">CASE pay_98a76b54c3210f</span>
+            <span class="badge-dot-sep">•</span>
+            <span class="badge-state-text" id="badge-state-5"><span class="status-dot dot-active"></span> Ready to Submit</span>
+          </div>
+          <p class="stage-subtitle" id="stage-05-subtitle">Review finalized unit economics, execute operational determination, and audit case outcome.</p>
+        </div>
+        <button type="button" class="btn-outline" onclick="goToQueue()" style="padding:7px 14px; font-size:12.5px; border-radius:6px;">← Back to Dispute Queue</button>
+      </div>
+
+      <!-- Pre-Submission View -->
+      <div id="submission-pre-view">
+        
+        <div class="card card-financials">
+          <div class="card-title-bar">
+            <h2 class="card-heading">Financial Impact &amp; Unit Economics</h2>
+            <span class="status-chip chip-success" id="sub-action-pill">AUTHORIZED: AUTO-CONTEST</span>
+          </div>
+
+          <div class="financials-grid">
+            <div class="finance-card">
+              <span class="fin-label">Dispute Capital</span>
+              <span class="fin-amount font-mono" id="sub-fin-amount">—</span>
+              <span class="fin-note">Contested transaction amount</span>
+            </div>
+
+            <div class="finance-card">
+              <span class="fin-label">Expected Net Recovery</span>
+              <span class="fin-amount font-mono" id="sub-fin-recovery">—</span>
+              <span class="fin-note" id="sub-fin-recovery-sub">Awaiting Analysis</span>
+            </div>
+
+            <div class="finance-card">
+              <span class="fin-label">Win Probability</span>
+              <span class="fin-amount font-mono" id="sub-fin-prob">—</span>
+              <span class="fin-note">CatBoost calibrated rate</span>
+            </div>
+
+            <div class="finance-card">
+              <span class="fin-label">Downside Penalty Exposure</span>
+              <span class="fin-amount font-mono" id="sub-fin-penalty">—</span>
+              <span class="fin-note">₹1,500 dispute-loss fee protected</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-defense-summary">
+          <h2 class="card-heading">Defense Strategy Rationale</h2>
+          <div class="defense-body" id="sub-rationale-text">
+            Run evidence analysis to assemble defense strategy rationale.
+          </div>
+        </div>
+
+        <!-- Collapsible Payload Card -->
+        <div class="card card-payload">
+          <button type="button" class="payload-accordion-header" onclick="togglePayloadAccordion()">
+            <div class="accordion-left">
+              <svg class="chevron-arrow" id="payload-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <span>View Razorpay CE 3.0 API Payload (POST /v1/disputes/{id}/contest)</span>
+            </div>
+            <span class="schema-tag">Rigid CE 3.0 Schema</span>
+          </button>
+
+          <div class="payload-accordion-body hidden" id="payload-accordion-body">
+            <div class="payload-bar">
+              <span class="endpoint-string">POST https://api.razorpay.com/v1/disputes/disp_98a76b54c3210f/contest</span>
+              <button type="button" class="btn-copy-code" id="btn-copy-payload" onclick="copyApiPayload()">Copy JSON</button>
+            </div>
+            <pre class="code-terminal"><code id="sub-payload-code">{\n  "loading": true\n}</code></pre>
+          </div>
+        </div>
+
+        <!-- Authorization Banner -->
+        <div class="authorization-banner" id="ready-submit-banner">
+          <div class="auth-icon-circle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <div class="auth-text-block">
+            <div class="auth-title">Ready for Transmission to Razorpay CE 3.0 API</div>
+            <div class="auth-caption">This action will compile the CE 3.0 evidence arrays and transmit via the official Razorpay Python SDK to contest the dispute.</div>
+          </div>
+          <button type="button" class="btn-transmit" id="btn-submit-razorpay" onclick="submitToRazorpayApi()">
+            <span>Submit to Razorpay API</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Success Screen -->
+      <div class="submission-success-container hidden" id="submission-success-view">
+        <div class="success-modal-card">
+          <div class="success-check-badge">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <h2 class="success-headline">Dispute Defense Successfully Submitted</h2>
+          <p class="success-subheadline">Contest payload transmitted to Razorpay Disputes API under Visa Compelling Evidence 3.0 regulations.</p>
+
+          <div class="success-audit-table">
+            <div class="audit-row">
+              <span class="audit-key">Submission Reference ID</span>
+              <span class="audit-val font-mono font-bold" id="res-submission-id">sub_98a76b54c3210f_2026</span>
+            </div>
+            <div class="audit-row">
+              <span class="audit-key">Razorpay Dispute ID</span>
+              <span class="audit-val font-mono" id="res-dispute-id">disp_98a76b54c3210f</span>
+            </div>
+            <div class="audit-row">
+              <span class="audit-key">Transmission Timestamp</span>
+              <span class="audit-val font-mono" id="res-timestamp">2026-08-30T12:12:00.000Z</span>
+            </div>
+            <div class="audit-row">
+              <span class="audit-key">API Response Status</span>
+              <span class="audit-val text-success font-bold" id="res-http-status">HTTP 200 OK (SUBMITTED_VIA_RAZORPAY_SDK)</span>
+            </div>
+            <div class="audit-row">
+              <span class="audit-key">Compliance Framework</span>
+              <span class="audit-val">Visa CE 3.0 / Mastercard Pre-Arbitration Standard</span>
+            </div>
+          </div>
+
+          <div class="success-actions">
+            <button type="button" class="btn-outline" onclick="downloadSubmissionReceipt()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Export Audit Receipt</span>
+            </button>
+            <button type="button" class="btn-primary" onclick="startNewDispute()">
+              <span>Start New Dispute Intake</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-footer-nav" id="sub-bottom-nav">
+        <button type="button" class="btn-outline" onclick="navigateToStep(4)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Back to Analyst Review</span>
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ====================================================================
+       MODAL 1: PRIORITY ANALYST QUEUE
+       ==================================================================== -->
+  <div class="modal-layer hidden" id="queue-modal" onclick="closeModalOnBackdrop(event, 'queue-modal')">
+    <div class="modal-card modal-wide">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Priority Analyst Review Queue</h2>
+          <p class="modal-subtitle">Borderline disputes (60% – 85% Win Probability) requiring human verification</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeModal('queue-modal')" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="table-scroll-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Dispute ID</th>
+                <th>Transaction</th>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Win Prob</th>
+                <th>VLM Status</th>
+                <th>EXIF Telemetry</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="queue-modal-tbody">
+              <!-- Rendered via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" onclick="closeModal('queue-modal')">Close</button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- FOOTER -->
-  <footer class="app-footer">
-    <div class="footer-inner">
-      <div>REBUTTAL // RAZORPAY BUILDATHON 2026</div>
-      <div>TRACK 02: AI RISK MANAGER • AUTOMATED DEFENSE, BACKED BY PROOF, NOT PERSUASION.</div>
-      <div>OFFICIAL RAZORPAY PYTHON SDK INTEGRATED</div>
+
+  <!-- ====================================================================
+       MODAL 2: 0.85 THRESHOLD POLICY & COST MATRIX
+       ==================================================================== -->
+  <div class="modal-layer hidden" id="policy-modal" onclick="closeModalOnBackdrop(event, 'policy-modal')">
+    <div class="modal-card modal-wide">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Risk Policy &amp; Asymmetric Cost Matrix</h2>
+          <p class="modal-subtitle">Quantitative justification for the 0.85 Auto-Contest Threshold</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeModal('policy-modal')" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-content">
+        
+        <div class="formula-callout">
+          <div class="formula-tag">ASYMMETRIC NET RECOVERY COST MODEL</div>
+          <div class="formula-math">Net Recovery = (TP × V_tx) − [FP × (V_tx + ₹1,500)] − [(FN + TN) × ₹200]</div>
+          <p class="formula-explanation">Contesting and losing costs the transaction amount PLUS a non-refundable ₹1,500 card network dispute penalty fee. The 0.85 threshold strictly maximizes net recovery across merchants.</p>
+        </div>
+
+        <div class="table-scroll-wrap" style="margin-top: 16px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Threshold</th>
+                <th>Auto-Contest Volume</th>
+                <th>Precision (Win Rate)</th>
+                <th>False Positives (Penalty Cost)</th>
+                <th>Net Financial Recovery</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="policy-modal-tbody">
+              <!-- Rendered via app.js -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" onclick="closeModal('policy-modal')">Close</button>
+      </div>
     </div>
-  </footer>
+  </div>
 
-  <script src="/static/app.js"></script>
+
+  <!-- ====================================================================
+       MODAL 3: FULLSCREEN EVIDENCE INSPECTOR
+       ==================================================================== -->
+  <div class="modal-layer hidden" id="fullscreen-evidence-modal" onclick="closeModalOnBackdrop(event, 'fullscreen-evidence-modal')">
+    <div class="modal-card modal-fullscreen">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">High-Resolution Evidence Forensic Inspector</h2>
+          <p class="modal-subtitle" id="fs-img-title">Original Pixel Integrity Examination</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeModal('fullscreen-evidence-modal')">✕</button>
+      </div>
+      <div class="modal-content fs-content">
+        <div class="fs-viewer-frame">
+          <img id="fs-evidence-img" src="" alt="Fullscreen Evidence Inspection">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" onclick="closeModal('fullscreen-evidence-modal')">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       MODAL 4: REQUEST ADDITIONAL INFORMATION
+       ==================================================================== -->
+  <div class="modal-layer hidden" id="modal-request-info" onclick="closeModalOnBackdrop(event, 'modal-request-info')">
+    <div class="modal-card" style="max-width:540px; background:white; border-radius:12px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 class="modal-title" style="font-size:17px; font-weight:700; color:#111a4a;">Request Additional Information</h2>
+          <p class="modal-subtitle" style="font-size:12.5px; color:#718096; margin-top:2px;">Issue a formal request to the buyer before completing review.</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeModal('modal-request-info')" style="background:none; border:none; font-size:18px; cursor:pointer; color:#718096;">✕</button>
+      </div>
+      <div class="modal-content" style="padding:24px;">
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#4a5568; margin-bottom:6px;">Request Title</label>
+          <input type="text" id="inp-req-title" class="input-control" value="Original Delivery Evidence Required" style="width:100%; padding:10px 14px; font-size:13.5px; border:1px solid #cbd5e1; border-radius:7px;" required />
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#4a5568; margin-bottom:6px;">Request Details / Instructions</label>
+          <textarea id="inp-req-message" class="input-control" rows="4" style="width:100%; padding:10px 14px; font-size:13.5px; border:1px solid #cbd5e1; border-radius:7px; font-family:inherit;" required>Please upload the original delivery photograph and provide the delivery date.</textarea>
+        </div>
+        <div style="font-size:12px; color:#64748b; background:#f1f5f9; padding:10px 14px; border-radius:6px; border-left:3px solid #0284c7;">
+          Sending this request updates the case status to <strong>WAITING FOR CUSTOMER</strong> and makes the request immediately visible on the customer's portal.
+        </div>
+      </div>
+      <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:16px 24px; display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn-outline" onclick="closeModal('modal-request-info')" style="padding:8px 16px; font-size:13px;">Cancel</button>
+        <button type="button" class="btn-primary" onclick="submitRequestInfo()" style="padding:8px 18px; font-size:13px; background:#167e6c; border:none; color:white; font-weight:600; border-radius:7px; cursor:pointer;">Send Request to Customer</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       MODAL 5: CONFIRM ANALYST DECISION
+       ==================================================================== -->
+  <div class="modal-layer hidden" id="confirm-decision-modal" onclick="closeModalOnBackdrop(event, 'confirm-decision-modal')">
+    <div class="modal-card" style="max-width:480px; background:white; border-radius:12px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 class="modal-title" style="font-size:16px; font-weight:800; color:#111a4a; letter-spacing:0.04em;">CONFIRM ANALYST DECISION</h2>
+          <p class="modal-subtitle" style="font-size:12px; color:#718096; margin-top:2px;">Review determination before recording to audit ledger</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeModal('confirm-decision-modal')" style="background:none; border:none; font-size:18px; cursor:pointer; color:#718096;">✕</button>
+      </div>
+      <div class="modal-content" style="padding:22px 24px;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#718096;">Decision:</span>
+            <span id="confirm-decision-name" style="font-size:13.5px; font-weight:800; color:#111a4a;">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#718096;">Win Probability:</span>
+            <span id="confirm-decision-prob" style="font-size:13.5px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#111a4a;">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#718096;">Policy Threshold:</span>
+            <span style="font-size:13.5px; font-family:'JetBrains Mono',monospace; font-weight:700; color:#111a4a;">85.0%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#718096;">Dispute Reference:</span>
+            <span id="confirm-decision-case" style="font-size:12.5px; font-family:'JetBrains Mono',monospace; color:#167e6c; font-weight:600;">—</span>
+          </div>
+        </div>
+        <div style="font-size:12.5px; color:#475569; background:#f1f5f9; padding:12px 14px; border-radius:6px; border-left:3px solid #167e6c; line-height:1.5;">
+          This action will be recorded in the case audit trail.
+        </div>
+      </div>
+      <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:14px 24px; display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn-outline" onclick="closeModal('confirm-decision-modal')" style="padding:8px 16px; font-size:13px;">Cancel</button>
+        <button type="button" class="btn-primary" id="btn-modal-confirm-action" onclick="commitConfirmedAnalystDecision()" style="padding:8px 20px; font-size:13px; background:#111a4a; border:none; color:white; font-weight:600; border-radius:7px; cursor:pointer;">Confirm Decision</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast Notifications -->
+  <div class="toast-hub" id="toast-container"></div>
+
+  <!-- Application Controller Script -->
+  <script src="/static/app.js?v=4.0"></script>
 </body>
 </html>

@@ -11,9 +11,8 @@ class ImageForensics:
 
     def extract_metadata(self, image_path: str) -> dict:
         """
-        Reads EXIF data from an image file. 
-        Explicitly handles EXIF-stripped images (e.g., WhatsApp, screenshots) 
-        which are highly correlated with fraudulent claims.
+        Reads EXIF data from an image file.
+        Returns structured GPS latitude/longitude and capture timestamp when available.
         """
         try:
             with open(image_path, 'rb') as f:
@@ -22,34 +21,73 @@ class ImageForensics:
             logger.error(f"Failed to read image {image_path}: {e}")
             return self._fallback_stripped_response()
 
-        # If no tags are found, or critical GPS/Date tags are missing, 
-        # we treat it as a stripped image.
-        if not tags or 'GPS GPSLatitude' not in tags:
-            logger.warning(f"EXIF stripped or unavailable for {image_path}.")
+        if not tags:
+            logger.warning(f"EXIF metadata unavailable for {image_path}.")
             return self._fallback_stripped_response()
-            
-        # Simplistic extraction for demo purposes. In a real production system,
-        # these would be cross-referenced mathematically against the delivery manifest.
-        logger.info("EXIF data intact. Extracting forensics.")
+
+        # Camera make/model
+        make = str(tags.get('Image Make', '')).strip()
+        model = str(tags.get('Image Model', '')).strip()
+        camera = f"{make} {model}".strip() if (make or model) else "Camera Model Present in File"
+
+        # GPS extraction – convert to decimal degrees if present
+        def _to_decimal(coord):
+            # coord is a list of Rational objects (deg, min, sec)
+            d, m, s = coord
+            deg = float(d.num) / float(d.den)
+            minute = float(m.num) / float(m.den)
+            sec = float(s.num) / float(s.den)
+            return deg + (minute / 60.0) + (sec / 3600.0)
+
+        gps_lat = None
+        gps_lon = None
+        if all(k in tags for k in ['GPS GPSLatitude', 'GPS GPSLatitudeRef', 'GPS GPSLongitude', 'GPS GPSLongitudeRef']):
+            try:
+                lat = _to_decimal(tags['GPS GPSLatitude'].values)
+                lon = _to_decimal(tags['GPS GPSLongitude'].values)
+                if str(tags['GPS GPSLatitudeRef']).upper() == 'S':
+                    lat = -lat
+                if str(tags['GPS GPSLongitudeRef']).upper() == 'W':
+                    lon = -lon
+                gps_lat = lat
+                gps_lon = lon
+            except Exception as ex:
+                logger.warning(f"Failed to parse GPS EXIF for {image_path}: {ex}")
+
+        # Timestamp extraction – prefer original capture time
+        timestamp = None
+        if 'EXIF DateTimeOriginal' in tags:
+            timestamp = str(tags['EXIF DateTimeOriginal'])
+        elif 'Image DateTime' in tags:
+            timestamp = str(tags['Image DateTime'])
+
+        has_telemetry = bool(camera or gps_lat is not None or gps_lon is not None or timestamp)
+        if not has_telemetry:
+            return self._fallback_stripped_response()
+
+        logger.info(f"EXIF metadata found for {image_path}.")
         return {
             "metadata_available": True,
-            "metadata_match": True,  # Simulated match for the demo
-            "gps_coordinates": str(tags.get('GPS GPSLatitude')),
-            "capture_timestamp": str(tags.get('Image DateTime')),
-            "flag": "EXIF_INTACT"
+            "metadata_match": True,
+            "camera_device": camera,
+            "gps_coordinates": {
+                "latitude": gps_lat,
+                "longitude": gps_lon
+            } if gps_lat is not None and gps_lon is not None else None,
+            "capture_timestamp": timestamp,
+            "flag": "EXIF_AVAILABLE",
+            "exif_note": "EXIF metadata was present in the submitted file. Metadata presence alone does not establish image originality or authenticity."
         }
 
     def _fallback_stripped_response(self) -> dict:
-        """
-        Standardized response for images lacking EXIF data.
-        This explicitly flags the missing data as a risk signal for the CatBoost model.
-        """
         return {
             "metadata_available": False,
             "metadata_match": False,
+            "camera_device": None,
             "gps_coordinates": None,
             "capture_timestamp": None,
-            "flag": "EXIF_STRIPPED_OR_UNAVAILABLE"
+            "flag": "EXIF_UNAVAILABLE",
+            "exif_note": "No camera metadata was present in the submitted file. Capture time, device information, and GPS location could not be independently verified."
         }
 
 # Instantiate for easy importing
