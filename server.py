@@ -29,6 +29,7 @@ from src.gatekeeper.train_model import evaluate_cost_matrix
 from src.case_store import (
     create_case, get_case, update_case, list_cases,
     append_audit_event, generate_dispute_id, seed_preset_cases,
+    verify_customer_ownership,
     STATUS_NEW, STATUS_EVIDENCE_RECEIVED, STATUS_ANALYZING,
     STATUS_ANALYSIS_COMPLETE, STATUS_AWAITING_REVIEW,
     STATUS_APPROVED, STATUS_OVERRIDDEN, STATUS_SUBMITTED,
@@ -260,24 +261,66 @@ async def analyze_custom_upload(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def get_model_evaluation_data() -> Dict[str, Any]:
+    """Loads the authoritative held-out test set evaluation artifact."""
+    eval_path = Path(__file__).parent / "data" / "model_evaluation.json"
+    if eval_path.exists():
+        try:
+            return json.loads(eval_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning(f"Could not parse {eval_path}: {e}")
+    return {
+        "business_decision_threshold": 0.85,
+        "penalty_fee_per_lost_contest": 1500.0,
+        "held_out_metrics_at_85_threshold": {
+            "threshold": 0.85,
+            "precision": 0.7116,
+            "recall": 0.8302,
+            "accuracy": 0.9356,
+            "roc_auc": 0.9433,
+            "brier_score": 0.0641,
+            "confusion_matrix": {"true_positives": 528, "true_negatives": 4150, "false_positives": 214, "false_negatives": 108},
+            "contested_count": 742,
+            "cost_per_false_positive": 1500.0,
+            "false_positive_penalty_cost": 321000.0
+        },
+        "dataset_metadata": {
+            "total_samples": 25000,
+            "train_samples": 20000,
+            "held_out_samples": 5000,
+            "held_out_positives": 636,
+            "held_out_negatives": 4364
+        },
+        "validation_cost_matrix": []
+    }
+
+
+@app.get("/api/model-evaluation")
+async def get_model_evaluation():
+    """
+    Returns the scientifically honest held-out test set evaluation artifact.
+    Contains strictly quarantined held-out metrics, confusion matrix, and sample sizes.
+    """
+    data = get_model_evaluation_data()
+    return JSONResponse(data)
+
+
 @app.get("/api/cost-matrix")
 async def get_cost_matrix():
-    """Returns the financial cost-matrix curve proving the 0.85 threshold."""
-    matrix = [
-        {"threshold": 0.50, "auto_contest_count": 903, "precision": 0.657, "false_positives": 310, "net_financial_impact": 2960600.0, "status": "High Penalty Risk"},
-        {"threshold": 0.60, "auto_contest_count": 818, "precision": 0.714, "false_positives": 234, "net_financial_impact": 4062600.0, "status": "High Penalty Risk"},
-        {"threshold": 0.70, "auto_contest_count": 808, "precision": 0.723, "false_positives": 224, "net_financial_impact": 4225600.0, "status": "High Penalty Risk"},
-        {"threshold": 0.75, "auto_contest_count": 806, "precision": 0.722, "false_positives": 224, "net_financial_impact": 4195200.0, "status": "Conservative"},
-        {"threshold": 0.80, "auto_contest_count": 797, "precision": 0.723, "false_positives": 221, "net_financial_impact": 4152900.0, "status": "Conservative"},
-        {"threshold": 0.85, "auto_contest_count": 762, "precision": 0.739, "false_positives": 199, "net_financial_impact": 4313900.0, "status": "⭐ OPTIMAL AUTO-CONTEST"},
-        {"threshold": 0.90, "auto_contest_count": 357, "precision": 0.975, "false_positives": 9,   "net_financial_impact": 4142900.0, "status": "Conservative"},
-        {"threshold": 0.95, "auto_contest_count": 352, "precision": 0.974, "false_positives": 9,   "net_financial_impact": 4066900.0, "status": "Conservative"},
-    ]
+    """Returns the validation-derived financial cost-matrix curve proving the 0.85 threshold."""
+    eval_data = get_model_evaluation_data()
+    held_out = eval_data.get("held_out_metrics_at_85_threshold", {})
+    matrix = eval_data.get("validation_cost_matrix", [])
+
     return JSONResponse({
         "metrics": {
-            "roc_auc_score": 0.9529,
-            "brier_score_loss": 0.0579,
+            "roc_auc_score": held_out.get("roc_auc", 0.9433),
+            "brier_score_loss": held_out.get("brier_score", 0.0641),
             "optimal_threshold": 0.85,
+            "precision": held_out.get("precision", 0.7116),
+            "recall": held_out.get("recall", 0.8302),
+            "false_positives": held_out.get("confusion_matrix", {}).get("false_positives", 214),
+            "false_positive_penalty_cost": held_out.get("false_positive_penalty_cost", 321000.0),
             "dispute_loss_penalty_fee": 1500.0,
             "human_review_triage_cost": 200.0,
         },
@@ -285,14 +328,63 @@ async def get_cost_matrix():
     })
 
 
+@app.get("/api/razorpay-status")
+async def get_razorpay_status():
+    """Returns current Razorpay API connectivity mode: DEMO_SIMULATION, RAZORPAY_TEST_API, or RAZORPAY_LIVE_API."""
+    from src.orchestrator.razorpay_client import razorpay_client
+    mode = razorpay_client.get_api_mode()
+    mode_badge = razorpay_client.get_mode_badge()
+    header_label = razorpay_client.get_header_label()
+    return JSONResponse({
+        "mode": mode,
+        "mode_badge": mode_badge,
+        "header_label": header_label,
+        "is_live": mode == "RAZORPAY_LIVE_API",
+        "is_test": mode == "RAZORPAY_TEST_API",
+        "is_simulated": mode == "DEMO_SIMULATION",
+        "has_credentials": bool(razorpay_client.key_id and razorpay_client.key_secret),
+        "sdk_installed": bool(razorpay_client.sdk_client is not None),
+    })
+
+
+@app.get("/api/vlm-config")
+async def get_vlm_config():
+    """Returns dynamically configured VLM providers and model names from environment."""
+    load_dotenv(override=True)
+    has_gemini = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+    has_groq = bool(os.getenv("GROQ_API_KEY"))
+    primary_model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite") if has_gemini else None
+    fallback_model = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.6-27b") if has_groq else None
+
+    # Format dynamic label
+    parts = []
+    if primary_model:
+        # e.g. "gemini-3.5-flash-lite" -> "Gemini 3.5 Flash Lite"
+        name = primary_model.replace("-", " ").title().replace("Gemini", "Gemini")
+        parts.append(name)
+    if fallback_model:
+        # e.g. "qwen/qwen3.6-27b" -> "Groq Qwen 3.6 27B Fallback"
+        clean_fb = fallback_model.split("/")[-1].replace("-", " ").title()
+        parts.append(f"Groq {clean_fb} Fallback")
+    council_label = " + ".join(parts) if parts else "Deterministic Rules"
+
+    return JSONResponse({
+        "primary_provider": "gemini" if has_gemini else None,
+        "primary_model": primary_model,
+        "fallback_provider": "groq" if has_groq else None,
+        "fallback_model": fallback_model,
+        "council_label": council_label,
+    })
+
+
 @app.post("/api/submit-contest")
 async def submit_dispute_contest(req: SubmitContestRequest):
     """
-    Submits authorized dispute defense directly to Razorpay CE 3.0 API.
-    Legacy endpoint — also used by /api/disputes/{id}/submit internally.
+    Submits authorized dispute defense. Uses official Razorpay SDK if configured,
+    or transparent Demo Simulation mode if credentials are absent.
     """
     dispute_id = req.dispute_id or f"disp_{req.transaction_id[-10:]}"
-    logger.info(f"API Contest Submission requested for: {dispute_id} | Action: {req.action}")
+    logger.info(f"Contest Submission requested for: {dispute_id} | Action: {req.action}")
 
     from src.orchestrator.razorpay_client import razorpay_client
     payload = req.evidence_payload or {}
@@ -302,18 +394,26 @@ async def submit_dispute_contest(req: SubmitContestRequest):
         evidence_payload=payload,
     )
 
+    is_sim = submission_res.get("is_simulated", True)
+    mode_badge = submission_res.get("mode_badge", "DEMO SIMULATION — NOT SENT TO RAZORPAY")
+    final_status = submission_res.get("status", "DEMO_SIMULATION_COMPLETED")
+
     return JSONResponse({
-        "status": "CONTEST_SUBMITTED_SUCCESS",
+        "status": final_status,
+        "is_simulated": is_sim,
+        "mode": submission_res.get("mode", "DEMO_SIMULATION"),
+        "mode_badge": mode_badge,
         "http_code": 200,
         "dispute_id": dispute_id,
         "transaction_id": req.transaction_id,
         "action": req.action,
         "override_reason": req.override_reason,
-        "submission_id": submission_res.get("submission_id", f"sub_{uuid.uuid4().hex[:12]}"),
+        "submission_id": submission_res.get("submission_id", f"sim_{uuid.uuid4().hex[:12]}"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "api_endpoint": f"POST https://api.razorpay.com/v1/disputes/{dispute_id}/contest",
+        "api_endpoint": f"POST https://api.razorpay.com/v1/disputes/{dispute_id}/contest" if not is_sim else "LOCAL_SIMULATION_ONLY",
         "regulatory_framework": "Visa Compelling Evidence 3.0 / Mastercard Dispute Rules",
         "details": submission_res,
+        "message": submission_res.get("message", f"Contestation processed in {mode_badge} mode.")
     })
 
 
@@ -421,13 +521,15 @@ async def create_dispute(
     }, status_code=201)
 
 
-def map_customer_status(status: str, has_info_req: bool = False) -> str:
+def map_customer_status(status: str, has_info_req: bool = False, submission_status: Optional[str] = None) -> str:
     if has_info_req or status == STATUS_EVIDENCE_REQUESTED:
         return "Action Required"
     elif status == STATUS_SUBMITTED:
-        return "Under Network Review"
+        return "Contest Submission Prepared / Under Network Review"
+    elif submission_status == "LIABILITY_CONCEDED":
+        return "Resolved — Liability Accepted"
     elif status == STATUS_OVERRIDDEN:
-        return "Resolved (Refund Approved)"
+        return "Resolved — Liability Accepted"
     elif status in (STATUS_EVIDENCE_RECEIVED, STATUS_ANALYZING, STATUS_ANALYSIS_COMPLETE, STATUS_AWAITING_REVIEW, STATUS_APPROVED):
         return "Under Review"
     return "Submitted"
@@ -452,8 +554,10 @@ async def list_customer_disputes_api(
     result = []
     for c in cases:
         ev = c.get("evidence") or {}
+        supp_ev = c.get("supplementary_evidence")
         req = c.get("additional_info_request") or {}
         has_req = req.get("status") == "requested" or c.get("status") == STATUS_EVIDENCE_REQUESTED
+        sub_status = (c.get("submission") or {}).get("status")
         result.append({
             "dispute_id": c["dispute_id"],
             "transaction_id": c.get("transaction_id", ""),
@@ -462,7 +566,7 @@ async def list_customer_disputes_api(
             "reason": c.get("reason", ""),
             "claim": c.get("claim", ""),
             "status": c.get("status", STATUS_NEW),
-            "customer_status": map_customer_status(c.get("status", STATUS_NEW), has_req),
+            "customer_status": map_customer_status(c.get("status", STATUS_NEW), has_req, sub_status),
             "has_action_required": has_req,
             "created_at": c.get("created_at", ""),
             "updated_at": c.get("updated_at", ""),
@@ -473,6 +577,7 @@ async def list_customer_disputes_api(
                 "url": ev.get("url", ""),
                 "size_bytes": ev.get("size_bytes", 0),
             },
+            "supplementary_evidence": supp_ev,
             "additional_info_request": c.get("additional_info_request"),
         })
     return JSONResponse(result)
@@ -496,9 +601,15 @@ async def get_customer_dispute_detail_api(
     if case.get("source") != "customer_submitted":
         raise HTTPException(status_code=403, detail="This case is not accessible via the customer portal.")
 
+    # Enforce customer ownership verification
+    if not verify_customer_ownership(case, customer_id=customer_id, customer_email=customer_email):
+        raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view this dispute.")
+
     ev = case.get("evidence") or {}
+    supp_ev = case.get("supplementary_evidence")
     req = case.get("additional_info_request") or {}
     has_req = req.get("status") == "requested" or case.get("status") == STATUS_EVIDENCE_REQUESTED
+    sub_status = (case.get("submission") or {}).get("status")
 
     return JSONResponse({
         "dispute_id": case["dispute_id"],
@@ -508,7 +619,7 @@ async def get_customer_dispute_detail_api(
         "reason": case.get("reason", ""),
         "claim": case.get("claim", ""),
         "status": case.get("status", STATUS_NEW),
-        "customer_status": map_customer_status(case.get("status", STATUS_NEW), has_req),
+        "customer_status": map_customer_status(case.get("status", STATUS_NEW), has_req, sub_status),
         "has_action_required": has_req,
         "created_at": case.get("created_at", ""),
         "updated_at": case.get("updated_at", ""),
@@ -519,6 +630,7 @@ async def get_customer_dispute_detail_api(
             "url": ev.get("url", ""),
             "size_bytes": ev.get("size_bytes", 0),
         },
+        "supplementary_evidence": supp_ev,
         "additional_info_request": case.get("additional_info_request"),
     })
 
@@ -616,6 +728,7 @@ async def analyze_dispute_case(dispute_id: str):
 
     try:
         dispute_payload = {
+            "dispute_id": dispute_id,
             "transaction_id": case["transaction_id"],
             "order_id": f"order_{case['transaction_id'][-8:]}",
             "claim_text": case["claim"],
@@ -633,21 +746,35 @@ async def analyze_dispute_case(dispute_id: str):
         # Extract perception/analysis fields
         perc = result.get("perception_result") or {}
         analysis_data = {
+            "analysis_status": perc.get("analysis_status", "ANALYZED"),
+            "vlm_available": perc.get("vlm_available", True),
             "vlm_contradiction_found": perc.get("vlm_contradiction_found", False),
-            "vision_confidence_score": perc.get("vision_confidence_score", 0.0),
+            "claim_supported": perc.get("claim_supported", False),
+            "physical_damage_visible": perc.get("physical_damage_visible", False),
+            "vision_confidence_score": perc.get("vision_confidence_score"),
             "insufficient_evidence": perc.get("insufficient_evidence", False),
             "vision_reasoning": perc.get("vision_reasoning", ""),
+            "operational_error": perc.get("operational_error"),
+            "provider": perc.get("provider"),
+            "model": perc.get("model"),
+            "fallback_used": perc.get("fallback_used", False),
             "metadata_available": perc.get("metadata_available", False),
             "metadata_match": perc.get("metadata_match", False),
+            "gps_available": perc.get("gps_available", False) or result.get("gps_available", False),
+            "merchant_gps_available": result.get("merchant_gps_available", False),
+            "timestamp_available": perc.get("timestamp_available", False) or result.get("timestamp_available", False),
+            "merchant_timestamp_available": result.get("merchant_timestamp_available", False),
             "camera_device": perc.get("camera_device"),
             "gps_coordinates": perc.get("gps_coordinates"),
             "capture_timestamp": perc.get("capture_timestamp"),
-            "exif_note": perc.get("exif_note"),
+            "exif_note": perc.get("exif_note") or "EXIF metadata presence alone does not establish image originality or authenticity.",
             # Telemetry correlation fields
-            "gps_correlation": result.get("gps_correlation"),
+            "gps_correlation": result.get("gps_correlation") or "NOT_VERIFIABLE",
             "gps_distance_meters": result.get("gps_distance_meters"),
-            "timestamp_correlation": result.get("timestamp_correlation"),
+            "gps_match_tolerance_meters": result.get("gps_match_tolerance_meters", 500),
+            "timestamp_correlation": result.get("timestamp_correlation") or "NOT_VERIFIABLE",
             "timestamp_difference_minutes": result.get("timestamp_difference_minutes"),
+            "timestamp_tolerance_minutes": result.get("timestamp_tolerance_minutes", 120),
             "merchant_reference": result.get("merchant_reference"),
         }
 
@@ -697,10 +824,10 @@ async def review_dispute(dispute_id: str, req: ReviewRequest):
 
     review_data = {
         "action": action,
-        "override_strategy": req.override_strategy,
-        "override_reason": req.override_reason,
-        "evidence_type": req.evidence_type,
-        "evidence_note": req.evidence_note,
+        "override_strategy": req.override_strategy if action == "OVERRIDE" else None,
+        "override_reason": req.override_reason if action == "OVERRIDE" else None,
+        "evidence_type": req.evidence_type if action == "REQUEST_EVIDENCE" else None,
+        "evidence_note": req.evidence_note if action == "REQUEST_EVIDENCE" else None,
         "analyst_name": req.analyst_name,
         "reviewed_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -719,7 +846,12 @@ async def review_dispute(dispute_id: str, req: ReviewRequest):
         "OVERRIDE": "analyst_overrode",
         "REQUEST_EVIDENCE": "analyst_requested_evidence",
     }
-    append_audit_event(dispute_id, event_map[action], {"analyst": req.analyst_name})
+    target_event = event_map[action]
+    existing_trail = case.get("audit_trail") or []
+    # Avoid appending duplicate review event only if the immediately preceding event is already this action
+    is_immediate_duplicate = bool(existing_trail and isinstance(existing_trail[-1], dict) and existing_trail[-1].get("event") == target_event)
+    if not is_immediate_duplicate:
+        append_audit_event(dispute_id, target_event, {"analyst": req.analyst_name})
 
     return JSONResponse({
         "dispute_id": dispute_id,
@@ -786,14 +918,14 @@ async def respond_additional_info(
     if case is None:
         raise HTTPException(status_code=404, detail=f"Dispute {dispute_id} not found.")
 
-    if customer_id and case.get("customer_id") and case["customer_id"] != customer_id:
+    if customer_id and case.get("customer_id") and not verify_customer_ownership(case, customer_id=customer_id):
         raise HTTPException(status_code=403, detail="Access denied: Dispute belongs to another customer.")
 
-    ev_info = case.get("evidence") or {}
+    ev_info = None
     if file:
         file_bytes = await file.read()
         suffix = Path(file.filename).suffix or ".jpg"
-        unique_name = f"{dispute_id}_resp_{uuid.uuid4().hex[:8]}{suffix}"
+        unique_name = f"{dispute_id}_supp_{uuid.uuid4().hex[:8]}{suffix}"
         save_path = Path("data/uploads") / unique_name
 
         with open(save_path, "wb") as f:
@@ -813,7 +945,7 @@ async def respond_additional_info(
     req_data["status"] = "responded"
     req_data["response"] = {
         "message": message,
-        "evidence": ev_info if file else None,
+        "evidence": ev_info,
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "submitted_by": customer_id or case.get("customer_id", "CUST_001"),
     }
@@ -822,13 +954,14 @@ async def respond_additional_info(
         "status": STATUS_EVIDENCE_RECEIVED,
         "additional_info_request": req_data,
     }
-    if file:
-        update_fields["evidence"] = ev_info
+    if file and ev_info:
+        # Save separately as supplementary_evidence to NEVER overwrite original customer evidence
+        update_fields["supplementary_evidence"] = ev_info
 
     update_case(dispute_id, update_fields)
 
     append_audit_event(dispute_id, "customer_info_responded", {
-        "has_evidence": file is not None,
+        "has_supplementary_evidence": file is not None,
         "submitted_by": customer_id or case.get("customer_id", "CUST_001"),
     })
 
@@ -836,7 +969,8 @@ async def respond_additional_info(
         "dispute_id": dispute_id,
         "status": STATUS_EVIDENCE_RECEIVED,
         "additional_info_request": req_data,
-        "evidence": ev_info,
+        "evidence": case.get("evidence"),
+        "supplementary_evidence": ev_info or case.get("supplementary_evidence"),
     })
 
 
@@ -882,7 +1016,7 @@ async def submit_dispute(dispute_id: str):
     is_concede = (action == "OVERRIDE" and review.get("override_strategy") == "CONCEDE") or (
         action == "APPROVE" and (
             (case.get("risk") or {}).get("routing_tier") in ("STANDARD_REVIEW", "CONCEDE")
-            or ((case.get("risk") or {}).get("win_probability", 1.0) < 0.60)
+            or ((case.get("risk") or {}).get("win_probability", 1.0) < 0.85)
         )
     )
 
@@ -903,6 +1037,7 @@ async def submit_dispute(dispute_id: str):
             "reason": concede_reason,
             "analyst": review.get("analyst_name", "Chethana A.")
         })
+        append_audit_event(dispute_id, "final_resolution_recorded")
         return JSONResponse({
             "dispute_id": dispute_id,
             "status": final_status,
@@ -931,12 +1066,19 @@ async def submit_dispute(dispute_id: str):
         evidence_payload=evidence_payload,
     )
 
+    is_sim = submission_res.get("is_simulated", True)
+    mode_badge = submission_res.get("mode_badge", "DEMO SIMULATION — NOT SENT TO RAZORPAY")
+    final_sub_status = submission_res.get("status", "DEMO_SIMULATION_COMPLETED")
+
     submission_data = {
-        "status": "CONTEST_SUBMITTED_SUCCESS",
+        "status": final_sub_status,
+        "is_simulated": is_sim,
+        "mode": submission_res.get("mode", "DEMO_SIMULATION"),
+        "mode_badge": mode_badge,
         "razorpay_dispute_id": razorpay_dispute_id,
-        "submission_id": submission_res.get("submission_id", f"sub_{uuid.uuid4().hex[:12]}"),
+        "submission_id": submission_res.get("submission_id", f"sim_{uuid.uuid4().hex[:12]}"),
         "action": review.get("action"),
-        "api_endpoint": f"POST https://api.razorpay.com/v1/disputes/{razorpay_dispute_id}/contest",
+        "api_endpoint": f"POST https://api.razorpay.com/v1/disputes/{razorpay_dispute_id}/contest" if not is_sim else "LOCAL_SIMULATION_ONLY",
         "regulatory_framework": "Visa Compelling Evidence 3.0 / Mastercard Dispute Rules",
         "evidence_payload": evidence_payload,
         "razorpay_response": submission_res,
@@ -1057,6 +1199,14 @@ async def download_audit_receipt(dispute_id: str):
         # ── Case Information ──────────────────────────────────────────────────
         story += section("01 · Case Information")
         source_label = "DEMO CASE" if case.get("source") == "demo" else "CUSTOMER SUBMITTED"
+        sub_data = case.get("submission") or {}
+        if sub_data.get("status") == "LIABILITY_CONCEDED" or sub_data.get("action") == "CONCEDE":
+            status_display = "LIABILITY_CONCEDED"
+        elif sub_data.get("status"):
+            status_display = sub_data.get("status").upper()
+        else:
+            status_display = (case.get("status", "—") or "—").upper()
+
         story.append(kv_table([
             ("Dispute ID",      case.get("dispute_id", "—")),
             ("Case Source",     source_label),
@@ -1065,7 +1215,7 @@ async def download_audit_receipt(dispute_id: str):
             ("Customer Email",  case.get("customer_email", "—")),
             ("Submission Date", fmt_ts(case.get("created_at"))),
             ("Last Updated",    fmt_ts(case.get("updated_at"))),
-            ("Current Status",  (case.get("status", "—") or "—").upper()),
+            ("Current Status",  status_display),
         ]))
 
         # ── Transaction & Claim ───────────────────────────────────────────────
@@ -1087,27 +1237,40 @@ async def download_audit_receipt(dispute_id: str):
         # ── Evidence ──────────────────────────────────────────────────────────
         story += section("03 · Submitted Evidence")
         ev = case.get("evidence") or {}
-        story.append(kv_table([
-            ("Original Filename",  ev.get("filename", "—")),
-            ("File Type",          ev.get("mime_type", "—")),
-            ("File Size",          f"{ev.get('size_bytes', 0) / 1024:.1f} KB" if ev.get("size_bytes") else "—"),
-            ("Upload Source",      ev.get("source", "—")),
-            ("Evidence URL",       ev.get("url", "—")),
-        ]))
+        ev_rows = [
+            ("Original Filename",      ev.get("filename", "—")),
+            ("File Type",              ev.get("mime_type", "—")),
+            ("File Size",              f"{ev.get('size_bytes', 0) / 1024:.1f} KB" if ev.get("size_bytes") else "—"),
+            ("Upload Source",          ev.get("source", "customer_submitted")),
+            ("Evidence URL",           ev.get("url", "—")),
+        ]
+        supp_ev = case.get("supplementary_evidence")
+        if supp_ev:
+            ev_rows.extend([
+                ("Supplementary Evidence", supp_ev.get("filename", "—")),
+                ("Supp. File Type",        supp_ev.get("mime_type", "—")),
+                ("Supp. File Size",        f"{supp_ev.get('size_bytes', 0) / 1024:.1f} KB" if supp_ev.get("size_bytes") else "—"),
+                ("Supp. Uploaded At",      fmt_ts(supp_ev.get("uploaded_at"))),
+            ])
+        story.append(kv_table(ev_rows))
 
         # ── Forensic Analysis ─────────────────────────────────────────────────
         story += section("04 · Forensic Analysis")
         analysis = case.get("analysis") or {}
 
-        # EXIF
-        exif_status = "AVAILABLE" if analysis.get("metadata_available") else "UNAVAILABLE / STRIPPED"
+        # EXIF & Telemetry
+        exif_avail  = bool(analysis.get("metadata_available"))
+        exif_status = "EXIF METADATA PRESENT" if exif_avail else "EXIF METADATA UNAVAILABLE / STRIPPED"
         gps_raw     = analysis.get("gps_coordinates")
-        if isinstance(gps_raw, dict):
-            gps_str = f"{gps_raw.get('latitude', '?'):.6f}, {gps_raw.get('longitude', '?'):.6f}"
-        elif gps_raw:
+        if isinstance(gps_raw, dict) and gps_raw.get("latitude") is not None:
+            gps_str = f"{gps_raw.get('latitude'):.6f}, {gps_raw.get('longitude'):.6f}"
+        elif gps_raw and str(gps_raw).strip() not in ("Unavailable", "GPS unavailable"):
             gps_str = str(gps_raw)
         else:
-            gps_str = "Unavailable"
+            gps_str = "EXIF metadata available — GPS unavailable" if exif_avail else "EXIF metadata unavailable / stripped"
+
+        ts_raw = analysis.get("capture_timestamp")
+        ts_str = str(ts_raw) if ts_raw else "Unavailable"
 
         gps_cor   = analysis.get("gps_correlation") or "NOT_VERIFIABLE"
         gps_dist  = analysis.get("gps_distance_meters")
@@ -1115,32 +1278,38 @@ async def download_audit_receipt(dispute_id: str):
         ts_diff   = analysis.get("timestamp_difference_minutes")
         mer_ref   = analysis.get("merchant_reference")
 
-        gps_cor_str = gps_cor.replace("_", " ")
-        if gps_dist is not None:
-            gps_cor_str += f" · {gps_dist:.0f}m"
-        ts_cor_str = ts_cor.replace("_", " ")
-        if ts_diff is not None:
-            ts_cor_str += f" · {ts_diff} min difference"
+        if gps_cor == "MATCH":
+            gps_cor_str = f"MATCH ({gps_dist:.1f} m distance, tolerance: 500 m)"
+        elif gps_cor == "MISMATCH":
+            gps_cor_str = f"MISMATCH ({gps_dist:.1f} m distance, tolerance: 500 m)"
+        else:
+            gps_cor_str = "NOT VERIFIABLE (correlation could not be performed)"
+
+        if ts_cor == "MATCH":
+            ts_cor_str = f"MATCH (Δ{ts_diff} min, tolerance: 120 min)"
+        elif ts_cor == "MISMATCH":
+            ts_cor_str = f"MISMATCH (Δ{ts_diff} min, tolerance: 120 min)"
+        else:
+            ts_cor_str = "NOT VERIFIABLE (correlation could not be performed)"
+
+        mer_label = "DEMO MERCHANT RECORD (Synthetic)" if mer_ref else "UNAVAILABLE — correlation not verifiable"
 
         story.append(kv_table([
-            ("EXIF Status",           exif_status),
+            ("EXIF Metadata",         exif_status),
             ("Camera / Device",       analysis.get("camera_device") or "Unavailable"),
-            ("Capture Timestamp",     analysis.get("capture_timestamp") or "Unavailable"),
+            ("Capture Timestamp",     ts_str),
             ("GPS Coordinates",       gps_str),
-            ("GPS Tolerance (m)",     "500"),
             ("GPS Correlation",       gps_cor_str),
-            ("Timestamp Tolerance",   "120 minutes"),
             ("Timestamp Correlation", ts_cor_str),
-            ("Merchant Telemetry",    "Present (Demo reference)" if mer_ref else "NOT AVAILABLE — correlation not verifiable"),
+            ("Merchant Telemetry",    mer_label),
         ]))
 
-        if not mer_ref:
-            story.append(Spacer(1, 1*mm))
-            story.append(Paragraph(
-                "⚠ No merchant delivery telemetry is available for this case. "
-                "GPS and timestamp correlations cannot be independently verified.",
-                S_NOTE
-            ))
+        story.append(Spacer(1, 1.5*mm))
+        story.append(Paragraph(
+            "Note: EXIF metadata presence alone does not establish image originality or authenticity. "
+            "Telemetry correlation is only marked MATCH when verified against independent merchant delivery records.",
+            S_NOTE
+        ))
 
         # VLM
         story.append(Spacer(1, 3*mm))
@@ -1150,14 +1319,14 @@ async def download_audit_receipt(dispute_id: str):
         if vlm_insuf:
             vlm_finding = "EVIDENCE INCONCLUSIVE"
         elif vlm_found:
-            vlm_finding = "CONTRADICTION DETECTED"
+            vlm_finding = "CLAIM CONTRADICTED BY SUBMITTED EVIDENCE"
         elif vlm_found is False:
-            vlm_finding = "NO CONTRADICTION"
+            vlm_finding = "CLAIM CONSISTENT WITH SUBMITTED EVIDENCE"
         else:
             vlm_finding = "PENDING / NOT RUN"
 
         story.append(kv_table([
-            ("Visual Contradiction",    vlm_finding),
+            ("Visual Assessment",       vlm_finding),
             ("Visual Confidence",       f"{(analysis.get('vision_confidence_score', 0) * 100):.1f}%" if analysis.get('vision_confidence_score') is not None else "—"),
             ("Insufficient Evidence",   "Yes" if vlm_insuf else ("No" if vlm_insuf is False else "—")),
             ("Vision Reasoning",        (analysis.get("vision_reasoning") or "—")[:280]),
@@ -1170,14 +1339,32 @@ async def download_audit_receipt(dispute_id: str):
         win_prob_str = f"{win_prob * 100:.1f}%" if win_prob is not None else "PENDING"
         margin = (win_prob - 0.85) * 100 if win_prob is not None else None
         margin_str = (f"+{margin:.1f}%" if margin >= 0 else f"{margin:.1f}%") if margin is not None else "—"
-        routing = (risk.get("routing_tier") or "PENDING").replace("_", " ")
+
+        # Derive routing dynamically from application decision logic (Threshold = 85.0%)
+        if win_prob is not None:
+            routing = "AUTO-CONTEST" if win_prob >= 0.85 else "CONCEDE LIABILITY"
+        elif risk.get("routing_tier"):
+            tier = risk.get("routing_tier")
+            if tier == "AUTO_CONTEST":
+                routing = "AUTO-CONTEST"
+            elif tier in ("STANDARD_REVIEW", "CONCEDE"):
+                routing = "CONCEDE LIABILITY"
+            else:
+                routing = tier.replace("_", " ")
+        else:
+            routing = "PENDING"
+
+        eval_data = get_model_evaluation_data()
+        held_out = eval_data.get("held_out_metrics_at_85_threshold", {})
+        roc_auc_val = held_out.get("roc_auc", 0.9433)
+        brier_val = held_out.get("brier_score", 0.0641)
 
         story.append(kv_table([
             ("CatBoost Win Probability", win_prob_str),
-            ("Policy Threshold",         "85.0%"),
+            ("Policy Threshold",         "85.0% (Calibrated Operational Decision Boundary)"),
             ("Policy Margin",            margin_str),
-            ("ROC-AUC Score",            "0.9529"),
-            ("Brier Score Loss",         "0.0579"),
+            ("ROC-AUC Benchmark",        f"{roc_auc_val:.4f} (Evaluated on held-out test set, n=5,000)"),
+            ("Brier Calibration Score",  f"{brier_val:.4f} (Evaluated on held-out test set, n=5,000)"),
             ("Recommended Routing",      routing),
         ]))
 
@@ -1187,11 +1374,41 @@ async def download_audit_receipt(dispute_id: str):
             story.append(Spacer(1, 2*mm))
             story.append(Paragraph("XAI / Feature Attribution", S_H2))
             xai_data = [["Feature", "Impact", "Direction"]]
+
+            # Check telemetry and VLM status from analysis to match UI behavior
+            analysis_dict = case.get("analysis") or {}
+            exif_avail = bool(analysis_dict.get("metadata_available"))
+            gps_cor = analysis_dict.get("gps_correlation") or "NOT_VERIFIABLE"
+            ts_cor = analysis_dict.get("timestamp_correlation") or "NOT_VERIFIABLE"
+            vlm_insuf = bool(analysis_dict.get("insufficient_evidence"))
+            vlm_failed = analysis_dict.get("analysis_status") == "ANALYSIS_FAILED" or analysis_dict.get("vlm_available") is False
+
             for drv in drivers[:6]:
-                feat    = drv.get("feature", "—")
-                impact  = drv.get("impact", 0)
-                direction = "▲ Increases Risk" if impact > 0 else "▼ Reduces Risk"
-                xai_data.append([feat, f"{impact:+.4f}", direction])
+                feat_raw = drv.get("feature", "—")
+                impact   = drv.get("impact", 0)
+
+                if feat_raw == "metadata_match":
+                    is_correlated = (gps_cor in ("MATCH", "MISMATCH") or ts_cor in ("MATCH", "MISMATCH"))
+                    if not is_correlated:
+                        feat_display = "metadata_available"
+                        dir_display  = "— Not Verifiable"
+                    else:
+                        feat_display = "metadata_match"
+                        dir_display  = "▲ Increases Win Prob" if impact > 0 else "▼ Reduces Win Prob"
+                elif feat_raw == "vlm_contradiction_found":
+                    feat_display = "vlm_contradiction_found"
+                    if vlm_failed:
+                        dir_display = "— Not Applicable"
+                    elif vlm_insuf:
+                        dir_display = "— Not Verifiable"
+                    else:
+                        dir_display = "▲ Increases Win Prob" if impact > 0 else "▼ Reduces Win Prob"
+                else:
+                    feat_display = feat_raw
+                    dir_display  = "▲ Increases Win Prob" if impact > 0 else "▼ Reduces Win Prob"
+
+                xai_data.append([feat_display, f"{impact:+.4f}", dir_display])
+
             xt = Table(xai_data, colWidths=[75*mm, 35*mm, 50*mm])
             xt.setStyle(TableStyle([
                 ("BACKGROUND",   (0,0),(-1,0), NAVY),
@@ -1213,13 +1430,18 @@ async def download_audit_receipt(dispute_id: str):
         story += section("06 · Analyst Review")
         review = case.get("review") or {}
         if review:
+            analyst_action = review.get("action", "—")
+            analyst_decision_str = f"APPROVE ({routing})" if analyst_action == "APPROVE" else analyst_action
+            is_ev_req = (analyst_action == "REQUEST_EVIDENCE") or bool(case.get("additional_info_request"))
+            ev_req = review.get("evidence_type") if is_ev_req else None
+            ev_note = review.get("evidence_note") if is_ev_req else None
             story.append(kv_table([
                 ("System Recommendation", routing),
-                ("Analyst Decision",      review.get("action", "—")),
+                ("Analyst Decision",      analyst_decision_str),
                 ("Override Strategy",     review.get("override_strategy") or "N/A"),
                 ("Override Reason",       review.get("override_reason") or "N/A"),
-                ("Evidence Requested",    review.get("evidence_type") or "N/A"),
-                ("Evidence Note",         review.get("evidence_note") or "N/A"),
+                ("Evidence Requested",    ev_req or "N/A"),
+                ("Evidence Note",         ev_note or "N/A"),
                 ("Analyst Name",          review.get("analyst_name", "—")),
                 ("Decision Timestamp",    fmt_ts(review.get("reviewed_at"))),
             ]))
@@ -1230,15 +1452,29 @@ async def download_audit_receipt(dispute_id: str):
         story += section("07 · Final Resolution")
         submission = case.get("submission") or {}
         if submission:
+            is_concede = submission.get("action") == "CONCEDE" or submission.get("status") == "LIABILITY_CONCEDED"
+            op_mode = submission.get("mode_badge") or ("INTERNAL RESOLUTION (LIABILITY CONCEDED)" if is_concede else "DEMO SIMULATION — NOT SENT TO RAZORPAY")
+            rzp_id = submission.get("razorpay_dispute_id") or ("N/A (Internal Concession)" if is_concede else "—")
+            sub_id = submission.get("submission_id") or (f"concede_{dispute_id}" if is_concede else "—")
+            api_ep = submission.get("api_endpoint") or ("N/A (Internal Settlement — No Network Transmission)" if is_concede else "—")
+            framework = submission.get("regulatory_framework") or ("Visa CE 3.0 / Network Dispute Rules (Liability Conceded)" if is_concede else "—")
+
+            # Canonical resolution timestamp aligns with active decision, not stale predecessor
+            submitted_ts = submission.get("submitted_at")
+            rev_ts = review.get("reviewed_at") if review else None
+            if rev_ts and submitted_ts and submitted_ts < rev_ts:
+                submitted_ts = rev_ts
+
             story.append(kv_table([
                 ("Final Status",       submission.get("status", "—")),
+                ("Operating Mode",     op_mode),
                 ("Final Action",       submission.get("action", "—")),
-                ("Razorpay Dispute ID",submission.get("razorpay_dispute_id", "—")),
-                ("Submission ID",      submission.get("submission_id", "—")),
-                ("API Endpoint",       submission.get("api_endpoint", "—")),
-                ("Framework",          submission.get("regulatory_framework", "—")),
-                ("Concede Reason",     submission.get("reason", "—") if submission.get("action") == "CONCEDE" else "N/A"),
-                ("Submitted At",       fmt_ts(submission.get("submitted_at"))),
+                ("Razorpay Dispute ID",rzp_id),
+                ("Submission ID",      sub_id),
+                ("API Endpoint",       api_ep),
+                ("Framework",          framework),
+                ("Concede Reason",     submission.get("reason", "—") if is_concede else "N/A"),
+                ("Submitted At",       fmt_ts(submitted_ts)),
             ]))
         else:
             story.append(Paragraph("No final submission recorded for this dispute.", S_VALUE))
@@ -1247,18 +1483,94 @@ async def download_audit_receipt(dispute_id: str):
         story += section("08 · Audit Trail")
         trail = case.get("audit_trail") or []
         if trail:
-            trail_data = [["Timestamp", "Event"]]
-            for entry in trail:
+            trail_data = [["Timestamp (UTC)", "Event Description", "Event Category"]]
+
+            # Find index of the final analyst_approved and liability_conceded events
+            last_approval_idx = -1
+            last_concede_idx = -1
+            for idx, entry in enumerate(trail):
+                if isinstance(entry, dict):
+                    if entry.get("event") == "analyst_approved":
+                        last_approval_idx = idx
+                    elif entry.get("event") == "liability_conceded":
+                        last_concede_idx = idx
+
+            start_idx = 0
+            comp_idx = 0
+            seen_entries = set()
+            for idx, entry in enumerate(trail):
                 if isinstance(entry, dict):
                     ts_str  = fmt_ts(entry.get("timestamp"))
-                    evt_str = (entry.get("event") or "").replace("_", " ").title()
+                    evt_raw = entry.get("event") or ""
+
+                    if evt_raw == "analysis_started":
+                        start_idx += 1
+                        if start_idx == 1:
+                            evt_str = "Initial Analysis Started"
+                            evt_type = "Automated Analysis"
+                        else:
+                            evt_str = f"Re-Analysis Started (Run #{start_idx})"
+                            evt_type = "Diagnostic Re-Run"
+                    elif evt_raw == "analysis_completed":
+                        comp_idx += 1
+                        if comp_idx == 1:
+                            evt_str = "Initial Analysis Completed"
+                            evt_type = "Automated Analysis"
+                        else:
+                            evt_str = f"Re-Analysis Completed (Run #{comp_idx})"
+                            evt_type = "Diagnostic Re-Run"
+                    elif evt_raw == "analyst_approved":
+                        if idx == last_approval_idx:
+                            evt_str = "Analyst Approved"
+                            evt_type = "Business Decision"
+                        else:
+                            evt_str = "Prior Decision (Superseded by Re-Analysis)"
+                            evt_type = "Superseded History"
+                    elif evt_raw == "liability_conceded":
+                        if idx == last_concede_idx and idx >= last_approval_idx:
+                            evt_str = "Liability Conceded"
+                            evt_type = "Business Decision"
+                        else:
+                            evt_str = "Prior Resolution (Superseded by Re-Analysis)"
+                            evt_type = "Superseded History"
+                    elif evt_raw in ("prior_determination_superseded", "prior_analyst_decision_superseded", "prior_decision_superseded"):
+                        evt_str = "Prior Decision (Superseded by Re-Analysis)"
+                        evt_type = "Superseded History"
+                    elif evt_raw in ("prior_concession_reopened", "prior_liability_conceded", "prior_concession_superseded", "prior_resolution_superseded"):
+                        evt_str = "Prior Resolution (Superseded by Re-Analysis)"
+                        evt_type = "Superseded History"
+                    elif evt_raw == "final_resolution_recorded":
+                        if idx >= last_approval_idx:
+                            evt_str = "Final Resolution Recorded"
+                            evt_type = "Business Decision"
+                        else:
+                            evt_str = "Prior Resolution (Superseded by Re-Analysis)"
+                            evt_type = "Superseded History"
+                    elif evt_raw == "case_created":
+                        evt_str = "Case Created"
+                        evt_type = "Case Lifecycle"
+                    elif evt_raw == "evidence_received":
+                        evt_str = "Evidence Received"
+                        evt_type = "Case Lifecycle"
+                    else:
+                        evt_str = evt_raw.replace("_", " ").title()
+                        evt_type = "Operational Log"
                 elif isinstance(entry, str):
                     ts_str  = "—"
                     evt_str = entry
+                    evt_type = "Log Entry"
                 else:
                     continue
-                trail_data.append([ts_str, evt_str])
-            tt = Table(trail_data, colWidths=[60*mm, 100*mm])
+
+                # Deduplicate identical superseded events for the same timestamp
+                dedup_key = (ts_str, evt_str)
+                if dedup_key in seen_entries:
+                    continue
+                seen_entries.add(dedup_key)
+
+                trail_data.append([ts_str, evt_str, evt_type])
+
+            tt = Table(trail_data, colWidths=[42*mm, 78*mm, 40*mm])
             tt.setStyle(TableStyle([
                 ("BACKGROUND",    (0,0),(-1,0), NAVY),
                 ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
@@ -1268,8 +1580,8 @@ async def download_audit_receipt(dispute_id: str):
                 ("VALIGN",        (0,0),(-1,-1), "TOP"),
                 ("TOPPADDING",    (0,0),(-1,-1), 4),
                 ("BOTTOMPADDING", (0,0),(-1,-1), 4),
-                ("LEFTPADDING",   (0,0),(-1,-1), 6),
-                ("RIGHTPADDING",  (0,0),(-1,-1), 6),
+                ("LEFTPADDING",   (0,0),(-1,-1), 5),
+                ("RIGHTPADDING",  (0,0),(-1,-1), 5),
                 ("GRID",          (0,0),(-1,-1), 0.3, BORDER),
             ]))
             story.append(tt)

@@ -53,8 +53,15 @@ def _case_path(dispute_id: str) -> Path:
 def _next_sequence() -> int:
     """Return the next sequential dispute counter based on existing files."""
     _ensure_dir()
-    existing = list(CASES_DIR.glob("DIS_*.json"))
-    return len(existing) + 1
+    max_seq = 0
+    for p in CASES_DIR.glob("DIS_*.json"):
+        m = re.search(r"DIS_\d{8}_(\d+)", p.stem)
+        if m:
+            try:
+                max_seq = max(max_seq, int(m.group(1)))
+            except ValueError:
+                pass
+    return max_seq + 1
 
 
 def generate_dispute_id() -> str:
@@ -91,6 +98,7 @@ def create_case(dispute_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         "user_account_age_days": payload.get("user_account_age_days", 365),
         "prior_chargeback_count": payload.get("prior_chargeback_count", 0),
         "evidence": payload.get("evidence", None),
+        "supplementary_evidence": payload.get("supplementary_evidence", None),
         "status": payload.get("status", STATUS_NEW),
         "analysis": None,
         "risk": None,
@@ -163,7 +171,7 @@ def case_exists(dispute_id: str) -> bool:
 
 
 def list_customer_cases(customer_id: Optional[str] = None, customer_email: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Return cases filtered by customer_id or customer_email."""
+    """Return cases filtered strictly by customer_id or customer_email."""
     all_cases = list_cases()
     if not customer_id and not customer_email:
         return []
@@ -174,6 +182,19 @@ def list_customer_cases(customer_id: Optional[str] = None, customer_email: Optio
         if (customer_id and c_id == customer_id) or (customer_email and c_email.lower() == customer_email.lower()):
             filtered.append(c)
     return filtered
+
+
+def verify_customer_ownership(case: Dict[str, Any], customer_id: Optional[str] = None, customer_email: Optional[str] = None) -> bool:
+    """Validate whether the requesting customer is the verified owner of this dispute."""
+    if not customer_id and not customer_email:
+        return False
+    c_id = case.get("customer_id", "")
+    c_email = case.get("customer_email", "")
+    if customer_id and c_id and c_id == customer_id:
+        return True
+    if customer_email and c_email and c_email.lower() == customer_email.lower():
+        return True
+    return False
 
 
 
@@ -187,18 +208,18 @@ PRESET_CASES = [
         "customer_email": "rajan.mehta@example.com",
         "amount": 119900.00,
         "currency": "INR",
-        "reason": "Damaged or Defective Goods",
+        "reason": "Damaged / Defective Goods",
         "claim": "The phone screen arrived completely shattered in pieces and unusable.",
         "merchant_category": "electronics",
-        "user_account_age_days": 365,
-        "prior_chargeback_count": 0,
+        "user_account_age_days": 5,
+        "prior_chargeback_count": 4,
         "evidence": {
             "source": "demo",
             "filename": "intact_phone.jpg",
             "path": "data/test_samples/intact_phone.jpg",
             "url": "/data/test_samples/intact_phone.jpg",
             "mime_type": "image/jpeg",
-            "size_bytes": 0,
+            "size_bytes": 8329,
         },
         "status": STATUS_EVIDENCE_RECEIVED,
         "audit_trail": [
@@ -214,18 +235,18 @@ PRESET_CASES = [
         "customer_email": "vikram.rao@example.com",
         "amount": 4999.00,
         "currency": "INR",
-        "reason": "Damaged or Defective Goods",
+        "reason": "Damaged / Defective Goods",
         "claim": "The item arrived physically damaged and cannot be used.",
         "merchant_category": "electronics",
-        "user_account_age_days": 90,
-        "prior_chargeback_count": 1,
+        "user_account_age_days": 850,
+        "prior_chargeback_count": 0,
         "evidence": {
             "source": "demo",
             "filename": "damaged_item.jpg",
             "path": "data/test_samples/damaged_item.jpg",
             "url": "/data/test_samples/damaged_item.jpg",
             "mime_type": "image/jpeg",
-            "size_bytes": 0,
+            "size_bytes": 11590,
         },
         "status": STATUS_EVIDENCE_RECEIVED,
         "audit_trail": [
@@ -241,18 +262,18 @@ PRESET_CASES = [
         "customer_email": "priya.nair@example.com",
         "amount": 14999.00,
         "currency": "INR",
-        "reason": "Damaged or Defective Goods",
+        "reason": "Damaged / Defective Goods",
         "claim": "The sneakers arrived damaged and showed signs of wear.",
         "merchant_category": "apparel",
-        "user_account_age_days": 45,
-        "prior_chargeback_count": 3,
+        "user_account_age_days": 180,
+        "prior_chargeback_count": 1,
         "evidence": {
             "source": "demo",
             "filename": "dark_ambiguous.jpg",
             "path": "data/test_samples/dark_ambiguous.jpg",
             "url": "/data/test_samples/dark_ambiguous.jpg",
             "mime_type": "image/jpeg",
-            "size_bytes": 0,
+            "size_bytes": 3354,
         },
         "status": STATUS_EVIDENCE_RECEIVED,
         "audit_trail": [
@@ -263,11 +284,11 @@ PRESET_CASES = [
 ]
 
 
-def seed_preset_cases():
+def seed_preset_cases(force_update_demos: bool = True):
     """
     Called at server startup.
-    Non-destructive: only creates the 3 demo cases if they don't already exist.
-    Customer-submitted disputes are NEVER deleted.
+    Ensures the 3 canonical demo cases are created or updated with current scenario features.
+    Customer-submitted disputes are NEVER deleted or touched.
     """
     _ensure_dir()
     for preset in PRESET_CASES:
@@ -275,8 +296,14 @@ def seed_preset_cases():
         if not _case_path(did).exists():
             create_case(did, dict(preset))
             logger.info(f"Seeded demo case: {did}")
-        else:
-            logger.info(f"Demo case already exists, skipping: {did}")
+        elif force_update_demos:
+            existing = get_case(did)
+            if existing and existing.get("source") == "demo":
+                for k in ["user_account_age_days", "prior_chargeback_count", "amount", "claim", "reason", "merchant_category", "evidence"]:
+                    if k in preset:
+                        existing[k] = preset[k]
+                _case_path(did).write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
+                logger.info(f"Synchronized demo case attributes: {did}")
 
 
 def reset_to_preset_cases():

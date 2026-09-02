@@ -6,19 +6,20 @@
   "customer_email": "rajan.mehta@example.com",
   "amount": 119900.0,
   "currency": "INR",
-  "reason": "Damaged or Defective Goods",
+  "reason": "Damaged / Defective Goods",
   "claim": "The phone screen arrived completely shattered in pieces and unusable.",
   "merchant_category": "electronics",
-  "user_account_age_days": 365,
-  "prior_chargeback_count": 0,
+  "user_account_age_days": 5,
+  "prior_chargeback_count": 4,
   "evidence": {
     "source": "demo",
     "filename": "intact_phone.jpg",
     "path": "data/test_samples/intact_phone.jpg",
     "url": "/data/test_samples/intact_phone.jpg",
     "mime_type": "image/jpeg",
-    "size_bytes": 0
+    "size_bytes": 8329
   },
+  "supplementary_evidence": null,
   "status": "evidence_received",
   "analysis": null,
   "risk": null,
@@ -34,6 +35,6 @@
       "timestamp": "2026-08-30T05:01:00+00:00"
     }
   ],
-  "created_at": "2026-08-31T17:29:54.216279+00:00",
-  "updated_at": "2026-08-31T17:29:54.216279+00:00"
+  "created_at": "2026-09-02T06:58:10.349428+00:00",
+  "updated_at": "2026-09-02T06:58:10.349428+00:00"
 }

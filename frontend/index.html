@@ -54,7 +54,7 @@
 
         <div class="status-live-pill">
           <span class="pulse-dot"></span>
-          <span>RAZORPAY CE 3.0 • LIVE TESTNET</span>
+          <span id="header-env-badge">RAZORPAY CE 3.0 • DEMO SIMULATION</span>
         </div>
       </div>
 
@@ -578,7 +578,7 @@
       <div class="processing-banner" id="analysis-processing-state">
         <div class="spinner"></div>
         <div class="banner-text">
-          <div class="banner-title" id="analysis-step-title">Analyzing evidence with Gemini 3.6 Flash VLM...</div>
+          <div class="banner-title" id="analysis-step-title">Analyzing evidence with Multimodal VLM...</div>
           <div class="banner-desc" id="analysis-step-sub">Scanning visual pixels, checking surface integrity, and parsing EXIF camera metadata.</div>
         </div>
       </div>
@@ -625,15 +625,28 @@
                   <span class="exif-value font-mono" id="exif-timestamp-val">—</span>
                 </div>
                 <div class="exif-row">
+                  <span class="exif-key">Timestamp Correlation:</span>
+                  <span class="exif-value font-mono" id="exif-ts-cor-val">—</span>
+                </div>
+                <div class="exif-row">
                   <span class="exif-key">GPS Coordinates:</span>
                   <span class="exif-value font-mono" id="exif-gps-val">—</span>
                 </div>
                 <div class="exif-row">
-                  <span class="exif-key">Metadata Assessment:</span>
+                  <span class="exif-key">GPS Correlation:</span>
+                  <span class="exif-value font-mono" id="exif-gps-cor-val">—</span>
+                </div>
+                <div class="exif-row">
+                  <span class="exif-key">Merchant Telemetry:</span>
+                  <span class="exif-value font-mono" id="exif-merchant-val">—</span>
+                </div>
+                <div class="exif-row">
+                  <span class="exif-key">Telemetry Assessment:</span>
                   <span class="exif-value" id="exif-delivery-match-val">Pending Analysis</span>
                 </div>
               </div>
               <div style="font-size:11.5px; color:#718096; border-top:1px solid #e2e8f0; margin-top:10px; padding-top:8px; line-height:1.4;" id="exif-disclaimer-note">
+                Note: EXIF metadata presence alone does not establish image originality or authenticity.
               </div>
             </div>
           </div>
@@ -663,7 +676,7 @@
               </div>
               <div class="finding-item">
                 <span class="finding-name">Perception Council</span>
-                <span class="finding-val">Gemini 3.6 Flash + Groq Vision Failover</span>
+                <span class="finding-val" id="perception-council-val">Gemini + Groq Failover</span>
               </div>
             </div>
           </div>
@@ -672,7 +685,7 @@
           <div class="card card-rationale">
             <div class="card-title-bar">
               <h2 class="card-heading">VLM Forensic Rationale</h2>
-              <span class="badge-engine">Gemini 3.6 Flash</span>
+              <span class="badge-engine" id="vlm-engine-badge">VLM Council</span>
             </div>
             <div class="narrative-box">
               <p class="narrative-body" id="vlm-rationale-text" style="color:#718096;">
@@ -684,18 +697,18 @@
           <!-- CE 3.0 Checklist -->
           <div class="card card-checklist">
             <h3 class="card-heading-sm">CE 3.0 Evidentiary Checklist</h3>
-            <ul class="checklist-items">
-              <li class="check-entry">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Photographic evidence resolves edge gradients without compression anomalies</span>
+            <ul class="checklist-items" id="ce3-checklist-items">
+              <li class="check-entry" id="checklist-item-pixel">
+                <span class="check-status-icon status-pending">—</span>
+                <span class="check-label">Photographic evidence pixel inspection</span>
               </li>
-              <li class="check-entry">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Camera EXIF telemetry correlates with merchant delivery dispatch window</span>
+              <li class="check-entry" id="checklist-item-telemetry">
+                <span class="check-status-icon status-pending">—</span>
+                <span class="check-label">Camera EXIF &amp; merchant delivery correlation</span>
               </li>
-              <li class="check-entry">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Dispute reason code 'damaged' challenged with physical pixel proof</span>
+              <li class="check-entry" id="checklist-item-reason">
+                <span class="check-status-icon status-pending">—</span>
+                <span class="check-label">Dispute reason code physical proof</span>
               </li>
             </ul>
           </div>
@@ -805,30 +818,131 @@
         </div>
       </div>
 
-      <!-- Model Metrics Grid -->
-      <div class="metrics-tiles-grid">
-        <div class="metric-tile">
-          <span class="tile-label">CatBoost Gatekeeper Score</span>
-          <span class="tile-value font-mono" id="stat-gatekeeper-score">—</span>
-          <span class="tile-caption">Calibrated probability output</span>
+      <!-- Model Evaluation Panel (Held-Out Test Set) -->
+      <div class="card card-model-eval" style="margin-bottom: 24px; border-left: 4px solid var(--color-cobalt-edge, #1e4199);">
+        <div class="card-title-bar" style="border-bottom: 1px solid var(--color-silver-lining); padding-bottom: 14px; margin-bottom: 18px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="status-chip chip-success" style="font-size: 10.5px; letter-spacing: 0.05em;">SCIENTIFIC AUDIT</span>
+              <h2 class="card-heading" style="margin: 0; font-size: 16px;">MODEL EVALUATION · Held-Out Test Set</h2>
+            </div>
+            <p class="card-subheading" style="margin-top: 4px;">
+              Genuinely quarantined held-out evaluation (n=5,000). Isolated prior to training and never used for fitting, calibration, or threshold selection.
+            </p>
+          </div>
+          <div style="text-align: right;">
+            <span class="font-mono" style="font-size: 11.5px; color: var(--color-steel);">Decision Threshold: <strong class="text-dark">85.0%</strong></span>
+          </div>
         </div>
 
-        <div class="metric-tile">
-          <span class="tile-label">ROC-AUC Benchmark</span>
-          <span class="tile-value font-mono">0.9529</span>
-          <span class="tile-caption">Validated on held-out test data</span>
+        <!-- 4 Primary Model Metrics Tiles -->
+        <div class="metrics-tiles-grid" style="margin-bottom: 18px;">
+          <div class="metric-tile">
+            <span class="tile-label">Precision (Win Rate @ 85%)</span>
+            <span class="tile-value font-mono text-success" id="eval-precision-val">—</span>
+            <span class="tile-caption">Contest win rate on held-out test</span>
+          </div>
+
+          <div class="metric-tile">
+            <span class="tile-label">Recall (@ 85% Threshold)</span>
+            <span class="tile-value font-mono" id="eval-recall-val">—</span>
+            <span class="tile-caption">Recoverable claims captured</span>
+          </div>
+
+          <div class="metric-tile">
+            <span class="tile-label">ROC-AUC Benchmark</span>
+            <span class="tile-value font-mono" id="eval-roc-auc-val">—</span>
+            <span class="tile-caption">Discriminative ranking quality</span>
+          </div>
+
+          <div class="metric-tile">
+            <span class="tile-label">Brier Calibration Score</span>
+            <span class="tile-value font-mono text-success" id="eval-brier-val">—</span>
+            <span class="tile-caption">Calibration loss (&lt;0.10 is well-calibrated)</span>
+          </div>
         </div>
 
-        <div class="metric-tile">
-          <span class="tile-label">Brier Calibration Score</span>
-          <span class="tile-value font-mono text-success">0.0579</span>
-          <span class="tile-caption">Target &lt; 0.10 for financial APIs</span>
+        <!-- Confusion Matrix & False-Positive Cost Breakdown -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background-color: var(--color-cloud-canvas); border: 1px solid var(--color-silver-lining); border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+          <!-- Left: Confusion Matrix -->
+          <div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-steel); margin-bottom: 10px;">
+              Held-Out Confusion Matrix (n = <span id="eval-held-out-count">5,000</span>)
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+              <div style="background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--color-silver-lining);">
+                <span style="color: var(--color-steel); display: block; font-size: 10.5px;">True Positives (TP)</span>
+                <strong class="font-mono text-success" style="font-size: 15px;" id="eval-tp-val">—</strong>
+              </div>
+              <div style="background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--color-silver-lining);">
+                <span style="color: var(--color-steel); display: block; font-size: 10.5px;">False Positives (FP)</span>
+                <strong class="font-mono text-danger" style="font-size: 15px;" id="eval-fp-val">—</strong>
+              </div>
+              <div style="background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--color-silver-lining);">
+                <span style="color: var(--color-steel); display: block; font-size: 10.5px;">False Negatives (FN)</span>
+                <strong class="font-mono" style="font-size: 15px; color: var(--color-slate-ink);" id="eval-fn-val">—</strong>
+              </div>
+              <div style="background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--color-silver-lining);">
+                <span style="color: var(--color-steel); display: block; font-size: 10.5px;">True Negatives (TN)</span>
+                <strong class="font-mono" style="font-size: 15px; color: var(--color-indigo-navy);" id="eval-tn-val">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: False-Positive Penalty Cost -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-steel); margin-bottom: 8px;">
+                False-Positive Penalty Cost
+              </div>
+              <div style="font-size: 12px; color: var(--color-slate-ink); line-height: 1.45; margin-bottom: 8px;">
+                Unsuccessful dispute contests incur a non-refundable card network penalty fee of <strong>₹1,500 per lost case</strong>.
+              </div>
+            </div>
+            <div style="background: #fff; padding: 10px 14px; border-radius: 4px; border: 1px solid var(--color-silver-lining);">
+              <span style="color: var(--color-steel); display: block; font-size: 11px;">Estimated Held-Out FP Cost (<span id="eval-fp-count-sub">0</span> FPs × ₹1,500)</span>
+              <strong class="font-mono text-danger" style="font-size: 18px;" id="eval-fp-cost-val">—</strong>
+              <span style="display: block; font-size: 10.5px; color: var(--color-steel); margin-top: 2px;">Estimated false-positive contest-cost for held-out evaluation set.</span>
+            </div>
+          </div>
         </div>
 
-        <div class="metric-tile">
-          <span class="tile-label">Optimal Policy Threshold</span>
-          <span class="tile-value font-mono">0.8500</span>
-          <span class="tile-caption">Maximizes net recovered capital</span>
+        <!-- Evaluation Methodology & Transparency Accordion -->
+        <details style="background: #ffffff; border: 1px solid var(--color-silver-lining); border-radius: 6px; padding: 10px 14px; font-size: 12px;">
+          <summary style="font-weight: 600; cursor: pointer; color: var(--color-indigo-navy); outline: none;">
+            🔍 Evaluation Methodology &amp; Dataset Transparency (Click to inspect)
+          </summary>
+          <div style="margin-top: 10px; color: var(--color-slate-ink); line-height: 1.55; border-top: 1px solid var(--color-silver-lining); padding-top: 10px;">
+            <p style="margin: 0 0 8px 0;">
+              <strong>Scientific Protocol:</strong> Metrics are calculated on a held-out test set that is excluded from model fitting, calibration, and threshold selection. The test split is reproducible using a fixed random seed (<code>seed=42</code>).
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; background-color: var(--color-cloud-canvas); padding: 10px; border-radius: 4px;">
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-steel); display: block;">Training Set</span>
+                <strong class="font-mono" id="eval-train-samples">20,000</strong>
+              </div>
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-steel); display: block;">Held-Out Test Set</span>
+                <strong class="font-mono" id="eval-test-samples">5,000</strong>
+              </div>
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-steel); display: block;">Held-Out Positives</span>
+                <strong class="font-mono text-success" id="eval-pos-count">636</strong>
+              </div>
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-steel); display: block;">Held-Out Negatives</span>
+                <strong class="font-mono text-danger" id="eval-neg-count">4,364</strong>
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: var(--color-steel);">
+              <em>Disclosure:</em> Dataset <code>synthetic_chargeback_data.csv</code> is a mathematically correlated synthetic simulation (25,000 samples) reflecting real-world fraud vectors and multimodal perception signals, adhering to banking data confidentiality rules for Track 02.
+            </p>
+          </div>
+        </details>
+
+        <!-- Distinction Callout -->
+        <div style="margin-top: 12px; padding: 8px 12px; background-color: #f8fafc; border-radius: 4px; border-left: 3px solid var(--color-steel); font-size: 11.5px; color: var(--color-slate-ink);">
+          ℹ️ <strong>Note:</strong> These are <strong>MODEL EVALUATION</strong> metrics on the held-out benchmark test set, demonstrating general statistical defensibility. The score in the Decision Summary bar above reflects the <strong>individual dispute</strong> currently undergoing analysis.
         </div>
       </div>
 
@@ -846,10 +960,10 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width: 28%;">Feature Factor</th>
-                <th style="width: 14%;">Contribution</th>
-                <th style="width: 22%;">Impact Direction</th>
-                <th style="width: 36%;">Operational Rationale</th>
+                <th style="width: 26%;">Feature Factor</th>
+                <th style="width: 12%;">Contribution</th>
+                <th style="width: 28%;">Impact Direction</th>
+                <th style="width: 34%;">Operational Rationale</th>
               </tr>
             </thead>
             <tbody id="xai-drivers-tbody">
@@ -948,8 +1062,20 @@
                 <span class="entry-value" id="rev-contradiction">Pending Analysis</span>
               </li>
               <li>
-                <span class="entry-label">Camera EXIF Telemetry:</span>
+                <span class="entry-label">EXIF Metadata:</span>
                 <span class="entry-value" id="rev-exif">Pending Analysis</span>
+              </li>
+              <li>
+                <span class="entry-label">GPS Telemetry:</span>
+                <span class="entry-value" id="rev-gps">Pending Analysis</span>
+              </li>
+              <li>
+                <span class="entry-label">Merchant Telemetry:</span>
+                <span class="entry-value" id="rev-merchant">Pending Analysis</span>
+              </li>
+              <li>
+                <span class="entry-label">Telemetry Correlation:</span>
+                <span class="entry-value" id="rev-correlation">Pending Analysis</span>
               </li>
               <li>
                 <span class="entry-label">VLM Council Assessment:</span>
@@ -960,6 +1086,9 @@
                 <span class="entry-value font-mono" id="rev-top-driver">—</span>
               </li>
             </ul>
+            <div style="font-size:11.5px; color:#718096; border-top:1px solid #e2e8f0; margin-top:10px; padding-top:8px; line-height:1.4;">
+              Note: EXIF metadata presence alone does not establish image originality or authenticity.
+            </div>
           </div>
 
         </div>
@@ -1144,9 +1273,9 @@
           <button type="button" class="payload-accordion-header" onclick="togglePayloadAccordion()">
             <div class="accordion-left">
               <svg class="chevron-arrow" id="payload-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              <span>View Razorpay CE 3.0 API Payload (POST /v1/disputes/{id}/contest)</span>
+              <span>View CE 3.0 Contestation Payload</span>
             </div>
-            <span class="schema-tag">Rigid CE 3.0 Schema</span>
+            <span class="schema-tag" id="sub-mode-tag">DEMO SIMULATION — NOT SENT TO RAZORPAY</span>
           </button>
 
           <div class="payload-accordion-body hidden" id="payload-accordion-body">
@@ -1164,8 +1293,11 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           </div>
           <div class="auth-text-block">
-            <div class="auth-title">Ready for Transmission to Razorpay CE 3.0 API</div>
-            <div class="auth-caption">This action will compile the CE 3.0 evidence arrays and transmit via the official Razorpay Python SDK to contest the dispute.</div>
+            <div class="auth-title" id="sub-banner-title">Ready for Transmission</div>
+            <div class="auth-caption" id="sub-banner-caption">This action will compile the CE 3.0 evidence arrays and execute the contestation workflow.</div>
+            <div style="margin-top: 6px;">
+              <span class="status-chip" id="sub-banner-mode-pill" style="font-weight: 700; font-size: 11px;">DEMO SIMULATION — NOT SENT TO RAZORPAY</span>
+            </div>
           </div>
           <button type="button" class="btn-transmit" id="btn-submit-razorpay" onclick="submitToRazorpayApi()">
             <span>Submit to Razorpay API</span>
@@ -1186,6 +1318,10 @@
 
           <div class="success-audit-table">
             <div class="audit-row">
+              <span class="audit-key">Operating Mode</span>
+              <span class="audit-val font-bold" id="res-mode-badge">DEMO SIMULATION — NOT SENT TO RAZORPAY</span>
+            </div>
+            <div class="audit-row">
               <span class="audit-key">Submission Reference ID</span>
               <span class="audit-val font-mono font-bold" id="res-submission-id">sub_98a76b54c3210f_2026</span>
             </div>
@@ -1199,7 +1335,7 @@
             </div>
             <div class="audit-row">
               <span class="audit-key">API Response Status</span>
-              <span class="audit-val text-success font-bold" id="res-http-status">HTTP 200 OK (SUBMITTED_VIA_RAZORPAY_SDK)</span>
+              <span class="audit-val text-success font-bold" id="res-http-status">HTTP 200 OK</span>
             </div>
             <div class="audit-row">
               <span class="audit-key">Compliance Framework</span>

@@ -6,19 +6,20 @@
   "customer_email": "priya.nair@example.com",
   "amount": 14999.0,
   "currency": "INR",
-  "reason": "Damaged or Defective Goods",
+  "reason": "Damaged / Defective Goods",
   "claim": "The sneakers arrived damaged and showed signs of wear.",
   "merchant_category": "apparel",
-  "user_account_age_days": 45,
-  "prior_chargeback_count": 3,
+  "user_account_age_days": 180,
+  "prior_chargeback_count": 1,
   "evidence": {
     "source": "demo",
     "filename": "dark_ambiguous.jpg",
     "path": "data/test_samples/dark_ambiguous.jpg",
     "url": "/data/test_samples/dark_ambiguous.jpg",
     "mime_type": "image/jpeg",
-    "size_bytes": 0
+    "size_bytes": 3354
   },
+  "supplementary_evidence": null,
   "status": "evidence_received",
   "analysis": null,
   "risk": null,
@@ -34,6 +35,6 @@
       "timestamp": "2026-08-29T23:01:00+00:00"
     }
   ],
-  "created_at": "2026-08-31T17:29:54.221297+00:00",
-  "updated_at": "2026-08-31T17:29:54.221297+00:00"
+  "created_at": "2026-09-02T06:58:10.357414+00:00",
+  "updated_at": "2026-09-02T06:58:10.357414+00:00"
 }

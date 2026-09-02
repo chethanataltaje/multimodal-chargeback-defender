@@ -6,19 +6,20 @@
   "customer_email": "vikram.rao@example.com",
   "amount": 4999.0,
   "currency": "INR",
-  "reason": "Damaged or Defective Goods",
+  "reason": "Damaged / Defective Goods",
   "claim": "The item arrived physically damaged and cannot be used.",
   "merchant_category": "electronics",
-  "user_account_age_days": 90,
-  "prior_chargeback_count": 1,
+  "user_account_age_days": 850,
+  "prior_chargeback_count": 0,
   "evidence": {
     "source": "demo",
     "filename": "damaged_item.jpg",
     "path": "data/test_samples/damaged_item.jpg",
     "url": "/data/test_samples/damaged_item.jpg",
     "mime_type": "image/jpeg",
-    "size_bytes": 0
+    "size_bytes": 11590
   },
+  "supplementary_evidence": null,
   "status": "evidence_received",
   "analysis": null,
   "risk": null,
@@ -34,6 +35,6 @@
       "timestamp": "2026-08-30T04:01:00+00:00"
     }
   ],
-  "created_at": "2026-08-31T17:29:54.219619+00:00",
-  "updated_at": "2026-08-31T17:29:54.219619+00:00"
+  "created_at": "2026-09-02T06:58:10.354124+00:00",
+  "updated_at": "2026-09-02T06:58:10.354124+00:00"
 }

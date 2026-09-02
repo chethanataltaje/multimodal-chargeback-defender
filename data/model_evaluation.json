@@ -1,0 +1,164 @@
+{
+  "dataset_metadata": {
+    "name": "synthetic_chargeback_data.csv",
+    "type": "Mathematically correlated synthetic chargeback dataset (Razorpay Track 02 Simulation)",
+    "is_synthetic": true,
+    "synthetic_rationale": "Real Razorpay merchant dispute and cardholder transaction records are strictly confidential under banking privacy regulations; dataset mathematically models realistic fraud vectors, account tenure distributions, and multimodal VLM signals.",
+    "total_samples": 25000,
+    "total_positives": 3181,
+    "total_negatives": 21819,
+    "split_methodology": "Stratified 80/20 train/held-out split with fixed random seed. Test set was quarantined prior to training and never used for fitting, calibration, or threshold selection.",
+    "random_seed": 42,
+    "train_samples": 20000,
+    "train_positives": 2545,
+    "train_negatives": 17455,
+    "held_out_samples": 5000,
+    "held_out_positives": 636,
+    "held_out_negatives": 4364
+  },
+  "model_metadata": {
+    "model_type": "CatBoostClassifier",
+    "version": "2.0.0",
+    "feature_columns": [
+      "user_account_age_days",
+      "transaction_amount",
+      "prior_chargeback_count",
+      "reason_code",
+      "merchant_category",
+      "vlm_contradiction_found",
+      "metadata_match"
+    ],
+    "categorical_features": [
+      "reason_code",
+      "merchant_category",
+      "vlm_contradiction_found",
+      "metadata_match"
+    ],
+    "iterations": 300,
+    "learning_rate": 0.08,
+    "depth": 5,
+    "auto_class_weights": "Balanced",
+    "calibration_method": "Native CatBoost sigmoid output calibrated on training data"
+  },
+  "business_decision_threshold": 0.85,
+  "penalty_fee_per_lost_contest": 1500.0,
+  "held_out_metrics_at_85_threshold": {
+    "threshold": 0.85,
+    "precision": 0.7116,
+    "recall": 0.8302,
+    "accuracy": 0.9356,
+    "roc_auc": 0.9433,
+    "brier_score": 0.0641,
+    "confusion_matrix": {
+      "true_positives": 528,
+      "true_negatives": 4150,
+      "false_positives": 214,
+      "false_negatives": 108
+    },
+    "contested_count": 742,
+    "cost_per_false_positive": 1500.0,
+    "false_positive_penalty_cost": 321000.0
+  },
+  "held_out_metrics_at_50_threshold": {
+    "threshold": 0.5,
+    "precision": 0.6353,
+    "recall": 0.9009,
+    "accuracy": 0.9216,
+    "confusion_matrix": {
+      "true_positives": 573,
+      "true_negatives": 4035,
+      "false_positives": 329,
+      "false_negatives": 63
+    }
+  },
+  "validation_cost_matrix": [
+    {
+      "threshold": 0.5,
+      "auto_contest_count": 738,
+      "precision": 0.6341,
+      "recall": 0.9194,
+      "false_positives": 270,
+      "false_positive_penalty_cost": 405000.0,
+      "net_financial_impact": 1912600.0,
+      "status": "\u26a0\ufe0f High Penalty Risk"
+    },
+    {
+      "threshold": 0.6,
+      "auto_contest_count": 736,
+      "precision": 0.6359,
+      "recall": 0.9194,
+      "false_positives": 268,
+      "false_positive_penalty_cost": 402000.0,
+      "net_financial_impact": 1945200.0,
+      "status": "\u26a0\ufe0f High Penalty Risk"
+    },
+    {
+      "threshold": 0.7,
+      "auto_contest_count": 644,
+      "precision": 0.7189,
+      "recall": 0.9096,
+      "false_positives": 181,
+      "false_positive_penalty_cost": 271500.0,
+      "net_financial_impact": 3287300.0,
+      "status": "\u26a0\ufe0f High Penalty Risk"
+    },
+    {
+      "threshold": 0.75,
+      "auto_contest_count": 644,
+      "precision": 0.7189,
+      "recall": 0.9096,
+      "false_positives": 181,
+      "false_positive_penalty_cost": 271500.0,
+      "net_financial_impact": 3287300.0,
+      "status": "Conservative"
+    },
+    {
+      "threshold": 0.8,
+      "auto_contest_count": 633,
+      "precision": 0.722,
+      "recall": 0.8978,
+      "false_positives": 176,
+      "false_positive_penalty_cost": 264000.0,
+      "net_financial_impact": 3277600.0,
+      "status": "Conservative"
+    },
+    {
+      "threshold": 0.85,
+      "auto_contest_count": 581,
+      "precision": 0.7384,
+      "recall": 0.8428,
+      "false_positives": 152,
+      "false_positive_penalty_cost": 228000.0,
+      "net_financial_impact": 3243200.0,
+      "status": "\u2b50 OPTIMAL AUTO-CONTEST"
+    },
+    {
+      "threshold": 0.9,
+      "auto_contest_count": 283,
+      "precision": 0.9753,
+      "recall": 0.5422,
+      "false_positives": 7,
+      "false_positive_penalty_cost": 10500.0,
+      "net_financial_impact": 3281100.0,
+      "status": "Conservative"
+    },
+    {
+      "threshold": 0.95,
+      "auto_contest_count": 271,
+      "precision": 0.9852,
+      "recall": 0.5246,
+      "false_positives": 4,
+      "false_positive_penalty_cost": 6000.0,
+      "net_financial_impact": 3193200.0,
+      "status": "Conservative"
+    }
+  ],
+  "evaluated_at": "2026-09-01T18:38:22.109438+00:00",
+  "notes_and_limitations": [
+    "Dataset is synthetic due to banking confidentiality requirements.",
+    "Metrics reflect the synthetic statistical distribution simulating real-world chargeback patterns.",
+    "The held-out test set was isolated prior to training and never used for fitting, calibration, or threshold selection.",
+    "False-positive cost is calculated strictly as false_positives * \u20b91,500 on the held-out evaluation set.",
+    "No API keys, credentials, or private customer PII are stored in this artifact."
+  ]
+}

@@ -658,6 +658,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupRouting();
   setupDragAndDrop();
   fetchScenarios().catch(e => console.warn("Scenario prefetch error:", e));
+  fetchRazorpayApiStatus().catch(() => {});
 
   // Check admin auth — if not authenticated, show login overlay and stop
   if (!checkAdminAuth()) return;
@@ -1178,7 +1179,12 @@ async function executePipelineAnalysis() {
   const stepSub = document.getElementById("analysis-step-sub");
   
   if (statusBanner) statusBanner.classList.remove("hidden");
-  if (stepTitle) stepTitle.innerText = "Analyzing visual evidence with Gemini 3.6 Flash VLM...";
+  fetchVlmConfig().then(cfg => {
+    if (stepTitle) {
+      const mName = cfg?.primary_model ? formatModelName(cfg.primary_model) : "Multimodal VLM";
+      stepTitle.innerText = `Analyzing visual evidence with ${mName}...`;
+    }
+  });
   if (stepSub) stepSub.innerText = "Cross-referencing camera telemetry and pixel consistency against customer statement.";
 
   try {
@@ -1357,14 +1363,40 @@ function renderEvidencePage() {
   }
 
   const p = res.perception_result;
-  const contradiction = p.vlm_contradiction_found;
+  const isVlmFailed = p.analysis_status === "ANALYSIS_FAILED" || p.vlm_available === false;
+  const contradiction = Boolean(p.vlm_contradiction_found);
 
   const badge = document.getElementById("vlm-contradiction-pill");
   const findingVal = document.getElementById("finding-contradiction-val");
   const damageVal = document.getElementById("finding-damage-val");
   const confVal = document.getElementById("finding-confidence-val");
 
-  if (p.insufficient_evidence) {
+  // Update Stage 2 state badge
+  const stage2Badge = document.getElementById("badge-state-2");
+  if (stage2Badge) {
+    if (isVlmFailed) {
+      stage2Badge.innerHTML = '<span class="status-dot dot-warning"></span> Analysis Unavailable';
+    } else {
+      stage2Badge.innerHTML = '<span class="status-dot dot-active"></span> Analysis Complete';
+    }
+  }
+
+  if (isVlmFailed) {
+    if (badge) {
+      badge.className = "status-chip chip-warning";
+      badge.innerText = "VISUAL ANALYSIS UNAVAILABLE";
+    }
+    if (findingVal) {
+      findingVal.className = "finding-val text-warning";
+      findingVal.innerText = "AUTOMATED VISUAL ANALYSIS UNAVAILABLE";
+    }
+    if (damageVal) {
+      damageVal.innerText = "Visual evidence could not be processed by AI council";
+    }
+    if (confVal) {
+      confVal.innerText = "Unavailable";
+    }
+  } else if (p.insufficient_evidence) {
     if (badge) {
       badge.className = "status-chip chip-warning";
       badge.innerText = "EVIDENCE INCONCLUSIVE";
@@ -1374,6 +1406,11 @@ function renderEvidencePage() {
       findingVal.innerText = "EVIDENCE INCONCLUSIVE";
     }
     if (damageVal) damageVal.innerText = "Image Too Ambiguous / Blurry / Cropped to Determine";
+    if (confVal) {
+      confVal.innerText = (p.vision_confidence_score !== undefined && p.vision_confidence_score !== null 
+        ? (p.vision_confidence_score * 100).toFixed(1) 
+        : "—") + "%";
+    }
   } else if (contradiction) {
     if (badge) {
       badge.className = "status-chip chip-danger";
@@ -1384,6 +1421,11 @@ function renderEvidencePage() {
       findingVal.innerText = "CLAIM CONTRADICTED BY SUBMITTED EVIDENCE";
     }
     if (damageVal) damageVal.innerText = "Intact Item / Physical Contradiction Identified";
+    if (confVal) {
+      confVal.innerText = (p.vision_confidence_score !== undefined && p.vision_confidence_score !== null 
+        ? (p.vision_confidence_score * 100).toFixed(1) 
+        : "95.0") + "%";
+    }
   } else {
     if (badge) {
       badge.className = "status-chip chip-success";
@@ -1394,75 +1436,183 @@ function renderEvidencePage() {
       findingVal.innerText = "CLAIM CONSISTENT WITH SUBMITTED EVIDENCE";
     }
     if (damageVal) damageVal.innerText = "Visible evidence is consistent with the reported damage";
+    if (confVal) {
+      confVal.innerText = (p.vision_confidence_score !== undefined && p.vision_confidence_score !== null 
+        ? (p.vision_confidence_score * 100).toFixed(1) 
+        : "95.0") + "%";
+    }
   }
 
-  if (confVal) {
-    confVal.innerText = (p.vision_confidence_score !== undefined && p.vision_confidence_score !== null 
-      ? (p.vision_confidence_score * 100).toFixed(1) 
-      : "95.0") + "%";
-  }
-
-  const rationaleText = document.getElementById("vlm-rationale-text");
+    const rationaleText = document.getElementById("vlm-rationale-text");
   if (rationaleText) {
-    let expl = p.vision_reasoning || p.rationale || "";
-    if (!contradiction && !p.insufficient_evidence) {
-      if (!expl.includes("The submitted image does not visibly contradict")) {
-        expl = (expl ? expl + " " : "") + "The submitted image does not visibly contradict the customer's claim. Visible evidence is consistent with the reported damage.";
+    if (isVlmFailed) {
+      const opErr = p.operational_error || "Primary VLM unavailable (quota limit); fallback VLM request failed.";
+      rationaleText.innerText = `Automated visual analysis could not be completed. ${opErr} Merchant or analyst visual review required.`;
+    } else {
+      const expl = p.vision_reasoning || p.rationale || "";
+      rationaleText.innerText = expl || "Visual analysis complete.";
+    }
+  }
+
+  // Dynamic Perception Council and VLM Engine Badge
+  const councilVal = document.getElementById("perception-council-val");
+  const engineBadge = document.getElementById("vlm-engine-badge");
+
+  fetchVlmConfig().then(cfg => {
+    if (councilVal) {
+      if (cfg?.council_label) {
+        councilVal.innerText = cfg.council_label;
+      } else if (p.provider && p.model) {
+        councilVal.innerText = `${formatModelName(p.model)} (${p.provider.toUpperCase()})`;
       }
     }
-    rationaleText.innerText = expl || "Visual analysis verified pixel consistency.";
+  });
+
+  if (engineBadge) {
+    if (isVlmFailed) {
+      engineBadge.className = "badge-engine";
+      engineBadge.innerText = "Unavailable";
+    } else if (p.provider === "gemini") {
+      engineBadge.className = "badge-engine";
+      engineBadge.innerText = p.model ? formatModelName(p.model) : "Gemini";
+    } else if (p.provider === "groq") {
+      const cleanM = p.model ? p.model.split("/").pop().replace("-", " ").toUpperCase() : "QWEN";
+      engineBadge.className = "badge-engine";
+      engineBadge.innerText = `Groq ${cleanM}`;
+    } else if (p.provider === "test_fixture") {
+      engineBadge.className = "badge-engine";
+      engineBadge.innerText = "Test Fixture";
+    } else if (p.model) {
+      engineBadge.className = "badge-engine";
+      engineBadge.innerText = formatModelName(p.model);
+    } else {
+      engineBadge.className = "badge-engine";
+      engineBadge.innerText = "VLM Council";
+    }
   }
 
   const exifBadge = document.getElementById("exif-badge-status");
   const cameraVal = document.getElementById("exif-camera-val");
   const timestampVal = document.getElementById("exif-timestamp-val");
+  const tsCorVal = document.getElementById("exif-ts-cor-val");
   const gpsVal = document.getElementById("exif-gps-val");
+  const gpsCorVal = document.getElementById("exif-gps-cor-val");
+  const merVal = document.getElementById("exif-merchant-val");
   const matchVal = document.getElementById("exif-delivery-match-val");
   const noteEl = document.getElementById("exif-disclaimer-note");
 
-  if (p.metadata_available) {
+  const gpsCor  = res.gps_correlation || "NOT_VERIFIABLE";
+  const tsCor   = res.timestamp_correlation || "NOT_VERIFIABLE";
+  const gpsDist = res.gps_distance_meters;
+  const tsDiff  = res.timestamp_difference_minutes;
+  const gpsTol  = res.gps_match_tolerance_meters || 500;
+  const tsTol   = res.timestamp_tolerance_minutes || 120;
+  const merRef  = res.merchant_reference;
+
+  const hasExif = Boolean(p.metadata_available);
+  let hasGps = false;
+  let lat = null;
+  let lon = null;
+  if (p.gps_coordinates && typeof p.gps_coordinates === "object" && p.gps_coordinates.latitude != null) {
+    hasGps = true;
+    lat = p.gps_coordinates.latitude;
+    lon = p.gps_coordinates.longitude;
+  }
+
+  const hasTs = Boolean(p.capture_timestamp && String(p.capture_timestamp).trim() && String(p.capture_timestamp).trim() !== "Unavailable");
+
+  if (hasExif) {
     if (exifBadge) {
       exifBadge.className = "status-chip chip-success";
-      exifBadge.innerText = "Available";
+      exifBadge.innerText = "EXIF Metadata Present";
     }
     if (cameraVal) cameraVal.innerText = p.camera_device || "Camera metadata present in file";
     if (timestampVal) timestampVal.innerText = p.capture_timestamp || "Unavailable";
-    if (gpsVal) {
-      const gpsRaw = p.gps_coordinates;
-      if (gpsRaw && typeof gpsRaw === "object" && gpsRaw.latitude != null) {
-        gpsVal.innerText = `${gpsRaw.latitude.toFixed(5)}, ${gpsRaw.longitude.toFixed(5)}`;
-      } else if (gpsRaw && typeof gpsRaw === "string" && gpsRaw !== "GPS unavailable" && gpsRaw !== "Unavailable") {
-        gpsVal.innerText = gpsRaw;
+
+    // Timestamp Correlation
+    if (tsCorVal) {
+      if (tsCor === "MATCH") {
+        tsCorVal.className = "exif-value text-success font-mono";
+        tsCorVal.innerText = `MATCH · Δ${tsDiff != null ? tsDiff : 0} min (tolerance: ${tsTol} min)`;
+      } else if (tsCor === "MISMATCH") {
+        tsCorVal.className = "exif-value text-danger font-mono";
+        tsCorVal.innerText = `MISMATCH · Δ${tsDiff != null ? tsDiff : '?'} min (tolerance: ${tsTol} min)`;
       } else {
-        gpsVal.innerText = "Unavailable";
+        tsCorVal.className = "exif-value font-mono";
+        if (hasTs && !merRef) {
+          tsCorVal.innerText = "Timestamp available — correlation not verifiable";
+        } else if (!hasTs) {
+          tsCorVal.innerText = "Timestamp unavailable";
+        } else {
+          tsCorVal.innerText = "Correlation not verifiable";
+        }
       }
     }
+
+    // GPS Coordinates
+    if (gpsVal) {
+      if (hasGps) {
+        gpsVal.innerText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      } else {
+        gpsVal.innerText = "EXIF metadata available — GPS unavailable";
+      }
+    }
+
+    // GPS Correlation
+    if (gpsCorVal) {
+      if (gpsCor === "MATCH") {
+        gpsCorVal.className = "exif-value text-success font-mono";
+        gpsCorVal.innerText = `MATCH · ${gpsDist != null ? gpsDist.toFixed(1) : 0} m (tolerance: ${gpsTol} m)`;
+      } else if (gpsCor === "MISMATCH") {
+        gpsCorVal.className = "exif-value text-danger font-mono";
+        gpsCorVal.innerText = `MISMATCH · ${gpsDist != null ? gpsDist.toFixed(1) : '?'} m (tolerance: ${gpsTol} m)`;
+      } else {
+        gpsCorVal.className = "exif-value font-mono";
+        if (hasGps && !merRef) {
+          gpsCorVal.innerText = "GPS available — correlation not verifiable";
+        } else if (!hasGps) {
+          gpsCorVal.innerText = "GPS unavailable — correlation could not be performed";
+        } else {
+          gpsCorVal.innerText = "Correlation not verifiable";
+        }
+      }
+    }
+
+    // Merchant reference
+    if (merVal) {
+      if (merRef) {
+        merVal.innerText = `${merRef.location_label || 'Merchant Reference Records'} (${merRef.delivery_latitude}, ${merRef.delivery_longitude})`;
+      } else {
+        merVal.innerText = "Merchant delivery telemetry unavailable";
+      }
+    }
+
+    // Telemetry Assessment
     if (matchVal) {
-      // Real telemetry correlation from backend
-      const gpsCor = res.gps_correlation;
-      const tsCor  = res.timestamp_correlation;
-      const gpsDist = res.gps_distance_meters;
-      const tsDiff  = res.timestamp_difference_minutes;
-      if (!gpsCor || gpsCor === "NOT_VERIFIABLE") {
-        matchVal.className = "exif-value";
-        matchVal.innerText = "Merchant delivery telemetry unavailable — correlation not verifiable.";
-      } else if (gpsCor === "MATCH" && (!tsCor || tsCor === "MATCH")) {
+      if (gpsCor === "MATCH" && tsCor === "MATCH") {
         matchVal.className = "exif-value text-success";
-        matchVal.innerText = `GPS & Timestamp MATCH delivery records` +
-          (gpsDist !== null && gpsDist !== undefined ? ` · Distance: ${gpsDist.toFixed(0)}m` : "") +
-          (tsDiff !== null && tsDiff !== undefined ? ` · Δ${tsDiff}min` : "");
+        matchVal.innerText = `GPS & Timestamp MATCH delivery records · Distance: ${gpsDist?.toFixed(0)}m (tol: ${gpsTol}m) · Δ${tsDiff}min (tol: ${tsTol}min)`;
+      } else if (gpsCor === "MATCH") {
+        matchVal.className = "exif-value text-success";
+        matchVal.innerText = `GPS MATCH delivery records (${gpsDist?.toFixed(0)}m, tol: ${gpsTol}m) · Timestamp correlation not verifiable`;
+      } else if (tsCor === "MATCH") {
+        matchVal.className = "exif-value text-success";
+        matchVal.innerText = `Timestamp MATCH delivery records (Δ${tsDiff}min, tol: ${tsTol}min) · GPS correlation not verifiable`;
       } else if (gpsCor === "MISMATCH" || tsCor === "MISMATCH") {
         matchVal.className = "exif-value text-danger";
         const parts = [];
-        if (gpsCor === "MISMATCH") parts.push(`GPS MISMATCH (${gpsDist !== null && gpsDist !== undefined ? gpsDist.toFixed(0) + 'm away' : 'location differs'})`);
-        if (tsCor === "MISMATCH") parts.push(`Timestamp MISMATCH (Δ${tsDiff !== null && tsDiff !== undefined ? tsDiff : '?'}min)`);
+        if (gpsCor === "MISMATCH") parts.push(`GPS MISMATCH (${gpsDist != null ? gpsDist.toFixed(0) + 'm away, tol: ' + gpsTol + 'm' : 'location differs'})`);
+        if (tsCor === "MISMATCH") parts.push(`Timestamp MISMATCH (Δ${tsDiff != null ? tsDiff : '?'}min, tol: ${tsTol}min)`);
         matchVal.innerText = parts.join(" · ");
       } else {
         matchVal.className = "exif-value";
-        matchVal.innerText = "NOT VERIFIABLE";
+        matchVal.innerText = "Merchant delivery telemetry unavailable — correlation not verifiable.";
       }
     }
-    if (noteEl) noteEl.innerText = p.exif_note || "EXIF metadata available in file headers. Delivery correlation against merchant reference telemetry.";
+
+    if (noteEl) {
+      noteEl.innerText = p.exif_note || "EXIF metadata presence alone does not establish image originality or authenticity. Capture time, device information, and GPS telemetry are verified only against independent merchant delivery records.";
+    }
   } else {
     if (exifBadge) {
       exifBadge.className = "status-chip";
@@ -1470,12 +1620,101 @@ function renderEvidencePage() {
     }
     if (cameraVal) cameraVal.innerText = "Unavailable";
     if (timestampVal) timestampVal.innerText = "Unavailable";
-    if (gpsVal) gpsVal.innerText = "Unavailable";
+    if (tsCorVal) {
+      tsCorVal.className = "exif-value font-mono";
+      tsCorVal.innerText = "Unavailable / Stripped";
+    }
+    if (gpsVal) gpsVal.innerText = "EXIF metadata unavailable / stripped";
+    if (gpsCorVal) {
+      gpsCorVal.className = "exif-value font-mono";
+      gpsCorVal.innerText = "Unavailable / Stripped";
+    }
+    if (merVal) {
+      merVal.innerText = merRef ? `${merRef.location_label || 'Merchant Reference Records'}` : "Merchant delivery telemetry unavailable";
+    }
     if (matchVal) {
       matchVal.className = "exif-value";
       matchVal.innerText = "Merchant delivery telemetry unavailable — correlation not verifiable.";
     }
-    if (noteEl) noteEl.innerText = "EXIF metadata unavailable / stripped from uploaded evidence. Capture time, device information, and GPS location could not be verified.";
+    if (noteEl) {
+      noteEl.innerText = "EXIF metadata unavailable / stripped from uploaded evidence. Capture time, device information, and GPS location could not be verified.";
+    }
+  }
+
+  // Render dynamic CE 3.0 Evidentiary Checklist
+  const checklistEl = document.getElementById("ce3-checklist-items");
+  if (checklistEl) {
+    const isContradiction = Boolean(p.vlm_contradiction_found);
+    const isInsufficient = Boolean(p.insufficient_evidence);
+    const reasonCode = d.reason_code || "damaged";
+
+    let item1Icon = `<span class="badge-status-check verified">✓ VERIFIED</span>`;
+    let item1Text = "Visual evidence successfully assessed from submitted image.";
+    let item1Class = "check-entry check-verified";
+    if (isVlmFailed) {
+      item1Icon = `<span class="badge-status-check unverifiable">⚠ UNAVAILABLE</span>`;
+      item1Text = "Automated visual analysis unavailable (VLM offline / quota limit)";
+      item1Class = "check-entry check-unverifiable";
+    } else if (isInsufficient) {
+      item1Icon = `<span class="badge-status-check failed">✕ INCONCLUSIVE</span>`;
+      item1Text = "Photographic evidence inconclusive / insufficient resolution for forensic verification";
+      item1Class = "check-entry check-failed";
+    }
+
+    let item2Icon = `<span class="badge-status-check unverifiable">⚠ UNVERIFIABLE</span>`;
+    let item2Text = "Camera EXIF metadata available; merchant telemetry unavailable for correlation";
+    let item2Class = "check-entry check-unverifiable";
+
+    if (!p.metadata_available) {
+      item2Icon = `<span class="badge-status-check failed">✕ FAILED</span>`;
+      item2Text = "Camera EXIF metadata unavailable / stripped from uploaded evidence";
+      item2Class = "check-entry check-failed";
+    } else if (res.gps_correlation === "MATCH" || res.timestamp_correlation === "MATCH") {
+      item2Icon = `<span class="badge-status-check verified">✓ VERIFIED</span>`;
+      item2Text = "Camera EXIF telemetry correlates with merchant delivery dispatch records";
+      item2Class = "check-entry check-verified";
+    } else if (res.gps_correlation === "MISMATCH" || res.timestamp_correlation === "MISMATCH") {
+      item2Icon = `<span class="badge-status-check failed">✕ FAILED</span>`;
+      item2Text = "Camera EXIF telemetry contradicts merchant delivery dispatch records";
+      item2Class = "check-entry check-failed";
+    } else {
+      item2Icon = `<span class="badge-status-check unverifiable">⚠ UNVERIFIABLE</span>`;
+      item2Text = "Camera EXIF metadata available; merchant telemetry unavailable for correlation";
+      item2Class = "check-entry check-unverifiable";
+    }
+
+    let item3Icon = `<span class="badge-status-check verified">✓ VERIFIED</span>`;
+    let item3Text = `Dispute reason code '${reasonCode}' challenged with physical pixel proof`;
+    let item3Class = "check-entry check-verified";
+
+    if (isVlmFailed) {
+      item3Icon = `<span class="badge-status-check unverifiable">⚠ UNAVAILABLE</span>`;
+      item3Text = "Photographic evidence could not be verified by automated VLM (analyst inspection required)";
+      item3Class = "check-entry check-unverifiable";
+    } else if (isInsufficient) {
+      item3Icon = `<span class="badge-status-check unverifiable">⚠ UNVERIFIABLE</span>`;
+      item3Text = `Pixel proof inconclusive for reason code '${reasonCode}' due to image quality`;
+      item3Class = "check-entry check-unverifiable";
+    } else if (!isContradiction) {
+      item3Icon = `<span class="badge-status-check failed">✕ NOT SATISFIED</span>`;
+      item3Text = "No visual contradiction detected; submitted evidence supports the customer's claim (defense signal not satisfied).";
+      item3Class = "check-entry check-failed";
+    }
+
+    checklistEl.innerHTML = `
+      <li class="${item1Class}">
+        ${item1Icon}
+        <span>${item1Text}</span>
+      </li>
+      <li class="${item2Class}">
+        ${item2Icon}
+        <span>${item2Text}</span>
+      </li>
+      <li class="${item3Class}">
+        ${item3Icon}
+        <span>${item3Text}</span>
+      </li>
+    `;
   }
 }
 
@@ -1497,10 +1736,80 @@ function applyZoom() {
   if (label) label.innerText = Math.round(appState.currentZoom * 100) + "%";
 }
 
+let modelEvalCache = null;
+
+async function fetchAndRenderModelEvaluation() {
+  try {
+    if (!modelEvalCache) {
+      const res = await fetch("/api/model-evaluation");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      modelEvalCache = await res.json();
+    }
+    const data = modelEvalCache;
+    const m = data.held_out_metrics_at_85_threshold || {};
+    const ds = data.dataset_metadata || {};
+    const cm = m.confusion_matrix || {};
+
+    const precEl = document.getElementById("eval-precision-val");
+    if (precEl) precEl.innerText = m.precision != null ? (m.precision * 100).toFixed(1) + "%" : "—";
+
+    const recEl = document.getElementById("eval-recall-val");
+    if (recEl) recEl.innerText = m.recall != null ? (m.recall * 100).toFixed(1) + "%" : "—";
+
+    const rocel = document.getElementById("eval-roc-auc-val");
+    if (rocel) rocel.innerText = m.roc_auc != null ? m.roc_auc.toFixed(4) : "—";
+
+    const brierEl = document.getElementById("eval-brier-val");
+    if (brierEl) brierEl.innerText = m.brier_score != null ? m.brier_score.toFixed(4) : "—";
+
+    const heldCountEl = document.getElementById("eval-held-out-count");
+    if (heldCountEl) heldCountEl.innerText = ds.held_out_samples ? ds.held_out_samples.toLocaleString() : "5,000";
+
+    const tpEl = document.getElementById("eval-tp-val");
+    if (tpEl) tpEl.innerText = cm.true_positives != null ? cm.true_positives.toLocaleString() : "—";
+
+    const fpEl = document.getElementById("eval-fp-val");
+    if (fpEl) fpEl.innerText = cm.false_positives != null ? cm.false_positives.toLocaleString() : "—";
+
+    const fnEl = document.getElementById("eval-fn-val");
+    if (fnEl) fnEl.innerText = cm.false_negatives != null ? cm.false_negatives.toLocaleString() : "—";
+
+    const tnEl = document.getElementById("eval-tn-val");
+    if (tnEl) tnEl.innerText = cm.true_negatives != null ? cm.true_negatives.toLocaleString() : "—";
+
+    const fpSubEl = document.getElementById("eval-fp-count-sub");
+    if (fpSubEl) fpSubEl.innerText = cm.false_positives != null ? cm.false_positives.toLocaleString() : "0";
+
+    const fpCostEl = document.getElementById("eval-fp-cost-val");
+    if (fpCostEl) fpCostEl.innerText = m.false_positive_penalty_cost != null ? `₹${m.false_positive_penalty_cost.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "—";
+
+    const trEl = document.getElementById("eval-train-samples");
+    if (trEl) trEl.innerText = ds.train_samples ? ds.train_samples.toLocaleString() : "20,000";
+
+    const tsEl = document.getElementById("eval-test-samples");
+    if (tsEl) tsEl.innerText = ds.held_out_samples ? ds.held_out_samples.toLocaleString() : "5,000";
+
+    const posEl = document.getElementById("eval-pos-count");
+    if (posEl) posEl.innerText = ds.held_out_positives ? ds.held_out_positives.toLocaleString() : "636";
+
+    const negEl = document.getElementById("eval-neg-count");
+    if (negEl) negEl.innerText = ds.held_out_negatives ? ds.held_out_negatives.toLocaleString() : "4,364";
+  } catch (err) {
+    console.warn("Could not load model evaluation artifact:", err);
+  }
+}
+
+// Prefetch and populate immediately
+fetchAndRenderModelEvaluation();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", fetchAndRenderModelEvaluation);
+}
+
 // ==========================================================================
 // STAGE 3: RISK ASSESSMENT RENDERER
 // ==========================================================================
 function renderRiskPage() {
+  fetchAndRenderModelEvaluation();
   const d = appState.dispute;
   const res = d.analysis_result;
   if (!res) {
@@ -1527,12 +1836,8 @@ function renderRiskPage() {
   }
 
   const winProb = res.win_probability || 0.0;
-  let routingTier = res.routing_tier;
-  if (!routingTier) {
-    if (winProb >= 0.85) routingTier = "AUTO_CONTEST";
-    else if (winProb >= 0.60) routingTier = "PRIORITY_TRIAGE";
-    else routingTier = "STANDARD_REVIEW";
-  }
+  const isAutoContest = winProb >= 0.85;
+  const routingTier = isAutoContest ? "AUTO_CONTEST" : "STANDARD_REVIEW";
 
   // 1. Auto-Contest Policy Card Updates
   const policyProbVal = document.getElementById("risk-policy-prob-val");
@@ -1553,12 +1858,9 @@ function renderRiskPage() {
   }
 
   if (policyTag) {
-    if (routingTier === "AUTO_CONTEST") {
+    if (isAutoContest) {
       policyTag.className = "status-chip chip-success";
       policyTag.innerText = "QUALIFIED FOR AUTO-DEFENSE";
-    } else if (routingTier === "PRIORITY_REVIEW" || routingTier === "PRIORITY_TRIAGE") {
-      policyTag.className = "status-chip";
-      policyTag.innerText = "PRIORITY HUMAN REVIEW REQUIRED";
     } else {
       policyTag.className = "status-chip chip-danger";
       policyTag.innerText = "CONCEDE LIABILITY RECOMMENDED";
@@ -1574,25 +1876,18 @@ function renderRiskPage() {
   if (probNum) probNum.innerText = (winProb * 100).toFixed(1) + "%";
 
   if (routingBadge) routingBadge.className = "routing-badge";
-  if (routingTier === "AUTO_CONTEST") {
+  if (isAutoContest) {
     if (routingText) routingText.innerText = "AUTO-CONTEST";
     if (probTag) {
       probTag.className = "win-prob-tag text-success";
-      probTag.innerText = "Above 0.85 Auto-Contest Threshold (Max Net Recovery)";
-    }
-  } else if (routingTier === "PRIORITY_REVIEW" || routingTier === "PRIORITY_TRIAGE") {
-    if (routingBadge) routingBadge.classList.add("tier-priority");
-    if (routingText) routingText.innerText = "PRIORITY TRIAGE";
-    if (probTag) {
-      probTag.className = "win-prob-tag text-warning";
-      probTag.innerText = "Borderline Zone (0.60 ≤ Score < 0.85)";
+      probTag.innerText = "Above 0.85 Policy Threshold (Max Net Recovery)";
     }
   } else {
     if (routingBadge) routingBadge.classList.add("tier-concede");
     if (routingText) routingText.innerText = "CONCEDE LIABILITY";
     if (probTag) {
       probTag.className = "win-prob-tag text-danger";
-      probTag.innerText = `Low Win Rate (${(winProb*100).toFixed(1)}% < 85%) · Avoid ₹1,500 Penalty Fee`;
+      probTag.innerText = `Below 0.85 Policy Threshold (${(winProb*100).toFixed(1)}% < 85%) · Avoid ₹1,500 Penalty Fee`;
     }
   }
 
@@ -1611,86 +1906,233 @@ function renderRiskPage() {
 
   drivers.forEach(d => {
     const tr = document.createElement("tr");
-    const exp = getShapMetadata(d.feature, d.impact);
+    const exp = getShapMetadata(d.feature, d.impact, res, d);
     const absImpact = Math.abs(d.impact);
-    const isPos = d.impact >= 0;
-    const color = isPos ? "var(--color-emerald-accent)" : "var(--color-crimson-accent)";
-    const barWidth = Math.min(100, Math.max(8, absImpact * 100));
+    const maxImpact = Math.max(...drivers.map(x => Math.abs(x.impact)), 1.0);
+    const barWidth = Math.min(100, Math.max(8, Math.round((absImpact / maxImpact) * 100)));
+
+    let color = "#475569";
+    let barColor = "#94a3b8";
+    let badgeClass = "dir-badge-neutral";
+
+    if (exp.dirState === "positive") {
+      color = "#059669";
+      barColor = "#10b981";
+      badgeClass = "dir-badge-positive";
+    } else if (exp.dirState === "negative") {
+      color = "#dc2626";
+      barColor = "#ef4444";
+      badgeClass = "dir-badge-negative";
+    }
+
+    const featureToken = exp.token || d.feature;
 
     tr.innerHTML = `
       <td>
         <span class="feature-name">${exp.title}</span>
-        <span class="feature-token font-mono">${d.feature}</span>
+        <span class="feature-token font-mono">${featureToken}</span>
       </td>
       <td>
-        <span class="shap-val font-mono" style="color: ${color};">
-          ${isPos ? '+' : ''}${d.impact.toFixed(3)}
+        <span class="shap-val font-mono" style="color: ${color}; font-weight: 700; font-size: 13.5px;">
+          ${d.impact >= 0 ? '+' : ''}${d.impact.toFixed(3)}
         </span>
       </td>
       <td>
         <div class="bar-cluster">
           <div class="bar-track">
-            <div class="bar-fill" style="width: ${barWidth}%; background-color: ${color};"></div>
+            <div class="bar-fill" style="width: ${barWidth}%; background-color: ${barColor};"></div>
           </div>
-          <span class="dir-text" style="color: ${color};">${exp.direction}</span>
+          <span class="impact-dir-badge ${badgeClass}">
+            ${exp.direction}
+          </span>
         </div>
       </td>
       <td>
-        <span style="color: var(--color-slate-ink); font-size: 12px;">${exp.desc}</span>
+        <span style="color: var(--color-slate-ink); font-size: 12px; line-height: 1.45;">${exp.desc}</span>
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-function getShapMetadata(feature, impact) {
+function getShapMetadata(feature, impact, res, dispute) {
   const isPos = impact >= 0;
+  const p = res?.perception_result || {};
+  const reasonCode = dispute?.reason_code || "damaged";
+  const amount = dispute?.transaction_amount;
+
   switch (feature) {
-    case 'vlm_contradiction_found':
+    case 'vlm_contradiction_found': {
+      if (p.analysis_status === "ANALYSIS_FAILED" || p.vlm_available === false) {
+        return {
+          title: "Visual Evidence Analysis Unavailable",
+          token: "vlm_contradiction_found = missing",
+          direction: "— NOT APPLICABLE",
+          dirState: "neutral",
+          desc: "Automated visual analysis could not be completed by the VLM council. Signal is excluded from defense evaluation."
+        };
+      }
+      if (p.insufficient_evidence) {
+        return {
+          title: "Visual Evidence Inconclusive",
+          token: "vlm_contradiction_found = inconclusive",
+          direction: "— NOT VERIFIABLE",
+          dirState: "neutral",
+          desc: "Submitted photographic evidence lacks clarity or resolution; visual contradiction cannot be conclusively determined."
+        };
+      }
+      const isContradiction = Boolean(p.vlm_contradiction_found);
+      const token = isContradiction ? "vlm_contradiction_found = 1" : "vlm_contradiction_found = 0";
+      const title = isContradiction ? "Visual Evidence Contradicts Customer Claim" : "Visual Evidence Supports Customer Claim";
+      const direction = isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY";
+      const dirState = isPos ? "positive" : "negative";
+      const desc = isContradiction 
+        ? "Visual evidence contradicts the customer's stated claim, strengthening the merchant's defense (vlm_contradiction_found = 1)."
+        : (p.vision_reasoning ? `Submitted photographic evidence is consistent with the customer's dispute claim (${p.vision_reasoning}) (vlm_contradiction_found = 0).` : "Submitted photographic evidence is consistent with the customer's dispute claim; no visual contradiction was detected (vlm_contradiction_found = 0).");
+      return { title, token, direction, dirState, desc };
+    }
+
+    case 'metadata_match': {
+      const gpsCor  = res?.gps_correlation;
+      const tsCor   = res?.timestamp_correlation;
+      const gpsDist = res?.gps_distance_meters;
+      const tsDiff  = res?.timestamp_difference_minutes;
+      const gpsTol  = res?.gps_match_tolerance_meters || 500;
+      const tsTol   = res?.timestamp_tolerance_minutes || 120;
+
+      if (gpsCor === "MATCH" && tsCor === "MATCH") {
+        return {
+          title: "GPS & Timestamp Correlation Verified",
+          token: "metadata_match",
+          direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+          dirState: isPos ? "positive" : "negative",
+          desc: `Image GPS is within configured distance tolerance (${gpsDist != null ? gpsDist.toFixed(0) + 'm' : ''}, tol: ${gpsTol}m) and capture time matches delivery window (Δ${tsDiff != null ? tsDiff + 'min' : ''}, tol: ${tsTol}min).`
+        };
+      }
+
+      if (gpsCor === "MATCH") {
+        return {
+          title: "GPS Correlation Verified",
+          token: "metadata_match",
+          direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+          dirState: isPos ? "positive" : "negative",
+          desc: `Image GPS is within the configured distance tolerance (${gpsDist != null ? gpsDist.toFixed(0) + 'm' : ''}, tol: ${gpsTol}m) of the merchant reference location.`
+        };
+      }
+
+      if (tsCor === "MATCH") {
+        return {
+          title: "Timestamp Correlation Verified",
+          token: "metadata_match",
+          direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+          dirState: isPos ? "positive" : "negative",
+          desc: `Image capture time falls within the configured delivery-window tolerance (Δ${tsDiff != null ? tsDiff + 'min' : ''}, tol: ${tsTol}min).`
+        };
+      }
+
+      if (gpsCor === "MISMATCH") {
+        return {
+          title: "GPS Correlation Mismatch",
+          token: "metadata_match",
+          direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+          dirState: isPos ? "positive" : "negative",
+          desc: `Image GPS falls outside the configured merchant-location tolerance (${gpsDist != null ? gpsDist.toFixed(0) + 'm away' : ''}, tol: ${gpsTol}m).`
+        };
+      }
+
+      if (tsCor === "MISMATCH") {
+        return {
+          title: "Timestamp Correlation Mismatch",
+          token: "metadata_match",
+          direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+          dirState: isPos ? "positive" : "negative",
+          desc: `Image capture time falls outside the configured delivery window (Δ${tsDiff != null ? tsDiff + 'min' : ''}, tol: ${tsTol}min).`
+        };
+      }
+
+      if (p.metadata_available) {
+        return {
+          title: "EXIF Metadata Present",
+          token: "metadata_available",
+          direction: "— NOT VERIFIABLE",
+          dirState: "neutral",
+          desc: "Camera metadata is present, but merchant reference telemetry is unavailable for independent correlation."
+        };
+      }
+
       return {
-        title: isPos ? "Visual Contradiction Flagged" : "Visual Evidence Supports Customer Claim",
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
-        desc: isPos 
-          ? "VLM detected physical pixels contradicting customer statement, strengthening dispute defense." 
-          : "Submitted evidence is consistent with the customer's dispute claim."
+        title: "EXIF Metadata Unavailable / Stripped",
+        token: "metadata_available",
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
+        desc: "No camera metadata was present in the submitted file. Capture time, device information, and GPS location could not be independently verified."
       };
-    case 'metadata_match':
+    }
+
+    case 'merchant_category':
       return {
-        title: isPos ? "EXIF Telemetry Available" : "EXIF Telemetry Unavailable / Stripped",
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
+        title: `Merchant Category (${dispute?.merchant_category || 'General'})`,
+        token: "merchant_category",
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
         desc: isPos 
-          ? "Available camera metadata strengthens the evidence chain." 
-          : "Metadata stripped or absent from upload, weakening evidence chain of custody."
+          ? "This feature has a positive SHAP contribution for the current case." 
+          : "This feature has a negative SHAP contribution for the current case."
       };
+
     case 'prior_chargeback_count':
       return {
-        title: isPos ? "Prior Dispute History" : "Clean Customer History",
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
-        desc: isPos ? "Customer record has prior chargebacks filed across merchants." : "Customer account shows zero prior chargebacks, indicating high claimant credibility."
+        title: isPos ? "Prior Dispute History (Elevated Risk)" : "Clean Customer Account History",
+        token: "prior_chargeback_count",
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
+        desc: isPos 
+          ? "Customer record has prior chargebacks filed across merchants, statistically correlating with higher dispute defensibility." 
+          : "Customer account shows zero prior chargebacks, indicating high claimant credibility."
       };
+
     case 'user_account_age_days':
       return {
-        title: isPos ? "New / Low Tenure Account" : "Established Account Trust",
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
-        desc: isPos ? "Account tenure is short, which correlates with elevated dispute filing risk." : "Longer account tenure indicates established buyer relationship."
+        title: isPos ? "New / Low Tenure Account Profile" : "Established Account Relationship",
+        token: "user_account_age_days",
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
+        desc: isPos 
+          ? "Account tenure is short, which correlates with elevated dispute filing risk." 
+          : "Longer account tenure indicates an established buyer relationship."
       };
-    case 'reason_code':
+
+    case 'reason_code': {
+      const categoryLabel = reasonCode ? reasonCode.toLowerCase().replace(/_/g, " ") : "goods";
       return {
-        title: "Dispute Reason Code",
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
-        desc: isPos ? "Dispute category permits clear evidentiary contest under Visa CE 3.0." : "Reason code carries stricter merchant evidentiary burden."
+        title: `Dispute Reason Code (${reasonCode})`,
+        token: "reason_code",
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
+        desc: `The ${categoryLabel} dispute category influences the model's assessment of merchant defense likelihood.`
       };
+    }
+
     case 'transaction_amount':
       return {
-        title: "Transaction Ticket Size",
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
-        desc: isPos ? "Higher transaction value optimizes net recovery ROI upon contestation." : "Lower ticket size reduces net recovery margin relative to operational cost."
+        title: `Transaction Ticket Size (${amount ? '₹' + amount.toLocaleString() : 'Amount'})`,
+        token: "transaction_amount",
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
+        desc: isPos 
+          ? "Higher transaction value optimizes net recovery ROI upon contestation." 
+          : "Lower ticket size reduces net recovery margin relative to operational dispute fees."
       };
+
     default:
       return {
         title: feature.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
-        direction: isPos ? "Increases Merchant Win Probability" : "Reduces Merchant Win Probability",
-        desc: isPos ? "Feature statistically correlates with positive dispute recovery." : "Feature statistically reduces merchant win probability."
+        token: feature,
+        direction: isPos ? "↑ INCREASES MERCHANT WIN PROBABILITY" : "↓ REDUCES MERCHANT WIN PROBABILITY",
+        dirState: isPos ? "positive" : "negative",
+        desc: isPos 
+          ? "This feature has a positive SHAP contribution for the current case." 
+          : "This feature has a negative SHAP contribution for the current case."
       };
   }
 }
@@ -1721,6 +2163,12 @@ function renderReviewPage() {
     }
     const revExif = document.getElementById("rev-exif");
     if (revExif) revExif.innerText = "Pending Analysis";
+    const revGps = document.getElementById("rev-gps");
+    if (revGps) revGps.innerText = "Pending Analysis";
+    const revMerchant = document.getElementById("rev-merchant");
+    if (revMerchant) revMerchant.innerText = "Pending Analysis";
+    const revCorrelation = document.getElementById("rev-correlation");
+    if (revCorrelation) revCorrelation.innerText = "Pending Analysis";
     const revVlmNote = document.getElementById("rev-vlm-note");
     if (revVlmNote) revVlmNote.innerText = "Awaiting visual evidence analysis.";
     const revTopDriver = document.getElementById("rev-top-driver");
@@ -1747,8 +2195,19 @@ function renderReviewPage() {
   if (thumb) thumb.src = d.image_url || d.image_path;
 
   const p = res.perception_result || {};
+  const gpsCor  = res.gps_correlation || "NOT_VERIFIABLE";
+  const tsCor   = res.timestamp_correlation || "NOT_VERIFIABLE";
+  const gpsDist = res.gps_distance_meters;
+  const tsDiff  = res.timestamp_difference_minutes;
+  const merRef  = res.merchant_reference;
+
+  // Visual Contradiction
   const revContradiction = document.getElementById("rev-contradiction");
-  if (p.insufficient_evidence) {
+  const isVlmFailed = p.analysis_status === "ANALYSIS_FAILED" || p.vlm_available === false;
+  if (isVlmFailed) {
+    revContradiction.className = "entry-value text-warning font-bold";
+    revContradiction.innerText = "VISUAL ANALYSIS UNAVAILABLE";
+  } else if (p.insufficient_evidence) {
     revContradiction.className = "entry-value text-warning font-bold";
     revContradiction.innerText = "EVIDENCE INCONCLUSIVE";
   } else if (p.vlm_contradiction_found) {
@@ -1759,40 +2218,59 @@ function renderReviewPage() {
     revContradiction.innerText = "NO CONTRADICTION (Claim Consistent with Submitted Evidence)";
   }
 
+  // EXIF Metadata
   const revExif = document.getElementById("rev-exif");
   if (revExif) {
-    if (p.metadata_available) {
-      const parts = [];
-      if (p.camera_device) parts.push(p.camera_device);
-      if (p.capture_timestamp) parts.push(p.capture_timestamp);
-      if (p.gps_coordinates) parts.push("GPS logged");
-      else parts.push("GPS unavailable");
-      // Telemetry correlation
-      const gpsCor  = res.gps_correlation;
-      const tsCor   = res.timestamp_correlation;
-      const gpsDist = res.gps_distance_meters;
-      const tsDiff  = res.timestamp_difference_minutes;
-      if (gpsCor === "MATCH" && (!tsCor || tsCor === "MATCH")) {
-        parts.push(`Delivery MATCH ✓${gpsDist != null ? ' · ' + gpsDist.toFixed(0) + 'm' : ''}${tsDiff != null ? ' · Δ' + tsDiff + 'min' : ''}`);
-      } else if (gpsCor === "MISMATCH" || tsCor === "MISMATCH") {
-        const mp = [];
-        if (gpsCor === "MISMATCH") mp.push(`GPS MISMATCH${gpsDist != null ? ' (' + gpsDist.toFixed(0) + 'm)' : ''}`);
-        if (tsCor  === "MISMATCH") mp.push(`Timestamp MISMATCH${tsDiff != null ? ' (Δ' + tsDiff + 'min)' : ''}`);
-        parts.push(mp.join(" · "));
-      } else {
-        parts.push("Merchant delivery telemetry unavailable — correlation not verifiable.");
-      }
-      revExif.innerText = `Available (${parts.join(" · ")})`;
+    revExif.innerText = p.metadata_available ? `Available (${p.camera_device || 'Camera metadata present'})` : "Unavailable / Stripped";
+  }
+
+  // GPS Telemetry
+  const revGps = document.getElementById("rev-gps");
+  if (revGps) {
+    if (p.gps_coordinates && typeof p.gps_coordinates === "object" && p.gps_coordinates.latitude != null) {
+      revGps.innerText = `${p.gps_coordinates.latitude.toFixed(5)}, ${p.gps_coordinates.longitude.toFixed(5)}`;
+    } else if (p.metadata_available) {
+      revGps.innerText = "Unavailable (EXIF metadata available — GPS unavailable)";
     } else {
-      revExif.innerText = "EXIF metadata unavailable / stripped";
+      revGps.innerText = "Unavailable / Stripped";
     }
   }
 
-  document.getElementById("rev-vlm-note").innerText = p.vision_reasoning ? p.vision_reasoning.slice(0, 120) + "..." : "Forensic analysis complete.";
+  // Merchant Telemetry
+  const revMerchant = document.getElementById("rev-merchant");
+  if (revMerchant) {
+    revMerchant.innerText = merRef ? (merRef.location_label || "Available (Hub records)") : "Unavailable";
+  }
+
+  // Telemetry Correlation
+  const revCorrelation = document.getElementById("rev-correlation");
+  if (revCorrelation) {
+    if (gpsCor === "MATCH" && tsCor === "MATCH") {
+      revCorrelation.className = "entry-value text-success font-bold";
+      revCorrelation.innerText = `MATCH (GPS: ${gpsDist?.toFixed(0)}m · Timestamp: Δ${tsDiff}min)`;
+    } else if (gpsCor === "MATCH") {
+      revCorrelation.className = "entry-value text-success font-bold";
+      revCorrelation.innerText = `GPS MATCH (${gpsDist?.toFixed(0)}m) · Timestamp: Not verifiable`;
+    } else if (tsCor === "MATCH") {
+      revCorrelation.className = "entry-value text-success font-bold";
+      revCorrelation.innerText = `Timestamp MATCH (Δ${tsDiff}min) · GPS: Not verifiable`;
+    } else if (gpsCor === "MISMATCH" || tsCor === "MISMATCH") {
+      revCorrelation.className = "entry-value text-danger font-bold";
+      const mp = [];
+      if (gpsCor === "MISMATCH") mp.push(`GPS MISMATCH (${gpsDist != null ? gpsDist.toFixed(0) + 'm' : ''})`);
+      if (tsCor === "MISMATCH") mp.push(`Timestamp MISMATCH (Δ${tsDiff}min)`);
+      revCorrelation.innerText = mp.join(" · ");
+    } else {
+      revCorrelation.className = "entry-value";
+      revCorrelation.innerText = "Not verifiable (Merchant delivery telemetry unavailable)";
+    }
+  }
+
+  document.getElementById("rev-vlm-note").innerText = p.vision_reasoning ? p.vision_reasoning.slice(0, 160) : "Forensic analysis complete.";
   
   const topD = res.top_drivers?.[0];
   if (topD) {
-    const meta = getShapMetadata(topD.feature, topD.impact);
+    const meta = getShapMetadata(topD.feature, topD.impact, res, d);
     document.getElementById("rev-top-driver").innerText = `${meta.title} (${topD.impact >= 0 ? '+' : ''}${topD.impact.toFixed(3)})`;
   } else {
     document.getElementById("rev-top-driver").innerText = "—";
@@ -1802,14 +2280,8 @@ function renderReviewPage() {
   document.getElementById("rev-win-prob").innerText = (winProb * 100).toFixed(1) + "%";
 
   // Derive recommendation dynamically from the current case's risk evaluation
-  let recType = "CONCEDE";
-  if (res.routing_tier === "AUTO_CONTEST" || (!res.routing_tier && winProb >= 0.85)) {
-    recType = "AUTO_CONTEST";
-  } else if (res.routing_tier === "PRIORITY_REVIEW" || res.routing_tier === "PRIORITY_TRIAGE" || (!res.routing_tier && winProb >= 0.60)) {
-    recType = "PRIORITY_TRIAGE";
-  } else {
-    recType = "CONCEDE";
-  }
+  const isAutoContest = winProb >= 0.85;
+  const recType = isAutoContest ? "AUTO_CONTEST" : "CONCEDE";
 
   const recPill = document.getElementById("rev-rec-pill");
   const recRat = document.getElementById("rev-rec-rationale");
@@ -1818,17 +2290,12 @@ function renderReviewPage() {
 
   if (recType === "AUTO_CONTEST") {
     if (recPill) recPill.innerText = "AUTO-CONTEST";
-    if (recRat) recRat.innerText = "Objective visual contradiction corroborated by evidence analysis. Net recovery model projects positive capital return under Visa Compelling Evidence 3.0.";
+    if (recRat) recRat.innerText = `Calibrated win probability (${(winProb * 100).toFixed(1)}%) meets or exceeds the 85% policy threshold. Net recovery model projects positive capital return under Visa Compelling Evidence 3.0.`;
     if (approveTitle) approveTitle.innerText = "Approve Recommendation (Auto-Contest)";
     if (approveDesc) approveDesc.innerText = "Authorize automated transmission of the evidence package to Razorpay CE 3.0.";
-  } else if (recType === "PRIORITY_TRIAGE") {
-    if (recPill) recPill.innerText = "PRIORITY TRIAGE";
-    if (recRat) recRat.innerText = "Win probability in borderline zone (60%-85%). Review evidence consistency before transmitting dispute contest.";
-    if (approveTitle) approveTitle.innerText = "Approve Recommendation (Priority Triage)";
-    if (approveDesc) approveDesc.innerText = "Accept the system recommendation and route the case for additional human review.";
   } else {
     if (recPill) recPill.innerText = "CONCEDE LIABILITY";
-    if (recRat) recRat.innerText = "Evidence corroborates customer claim. Recommending liability acceptance to avoid the non-refundable ₹1,500 dispute penalty fee.";
+    if (recRat) recRat.innerText = `Calibrated win probability (${(winProb * 100).toFixed(1)}%) is below the 85% policy threshold. Recommending liability acceptance to avoid the non-refundable ₹1,500 dispute penalty fee.`;
     if (approveTitle) approveTitle.innerText = "Approve Recommendation (Concede Liability)";
     if (approveDesc) approveDesc.innerText = "Accept the system recommendation and proceed with liability acceptance.";
   }
@@ -1926,10 +2393,8 @@ function openConfirmDecisionModal() {
 
   let decisionLabel = "CONCEDE LIABILITY";
   if (d.analyst_action === "APPROVE") {
-    const isRecContest = res?.routing_tier === "AUTO_CONTEST" || (!res?.routing_tier && winProb >= 0.85);
-    const isRecPriority = res?.routing_tier === "PRIORITY_REVIEW" || res?.routing_tier === "PRIORITY_TRIAGE" || (!res?.routing_tier && winProb >= 0.60 && winProb < 0.85);
+    const isRecContest = winProb >= 0.85;
     if (isRecContest) decisionLabel = "AUTO-CONTEST (CE 3.0)";
-    else if (isRecPriority) decisionLabel = "PRIORITY TRIAGE";
     else decisionLabel = "CONCEDE LIABILITY";
   } else if (d.analyst_action === "OVERRIDE") {
     decisionLabel = `OVERRIDE (${d.override_strategy || 'MANUAL'})`;
@@ -1969,9 +2434,60 @@ async function commitConfirmedAnalystDecision() {
 // ==========================================================================
 // STAGE 5: SUBMISSION & API EXECUTION
 // ==========================================================================
-function renderSubmissionPage() {
+
+let razorpayApiStatusCache = null;
+let vlmConfigCache = null;
+
+async function fetchVlmConfig() {
+  try {
+    if (!vlmConfigCache) {
+      const res = await fetch("/api/vlm-config");
+      if (res.ok) vlmConfigCache = await res.json();
+    }
+    return vlmConfigCache;
+  } catch (e) {
+    return null;
+  }
+}
+
+function formatModelName(modelStr) {
+  if (!modelStr) return "VLM Council";
+  const base = modelStr.split("/").pop();
+  return base.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+async function fetchRazorpayApiStatus() {
+  try {
+    if (!razorpayApiStatusCache) {
+      const res = await fetch("/api/razorpay-status");
+      if (res.ok) razorpayApiStatusCache = await res.json();
+    }
+    const rzp = razorpayApiStatusCache || {
+      mode: "DEMO_SIMULATION",
+      mode_badge: "DEMO SIMULATION — NOT SENT TO RAZORPAY",
+      header_label: "RAZORPAY CE 3.0 • DEMO SIMULATION",
+      is_simulated: true
+    };
+    const envBadge = document.getElementById("header-env-badge");
+    if (envBadge && rzp.header_label) {
+      envBadge.innerText = rzp.header_label;
+    }
+    return rzp;
+  } catch (e) {
+    return {
+      mode: "DEMO_SIMULATION",
+      mode_badge: "DEMO SIMULATION — NOT SENT TO RAZORPAY",
+      header_label: "RAZORPAY CE 3.0 • DEMO SIMULATION",
+      is_simulated: true
+    };
+  }
+}
+
+async function renderSubmissionPage() {
   const d = appState.dispute;
   const res = d.analysis_result;
+  const rzpStatus = await fetchRazorpayApiStatus();
+
   if (!res) {
     const amt = document.getElementById("sub-fin-amount");
     const rec = document.getElementById("sub-fin-recovery");
@@ -1992,9 +2508,8 @@ function renderSubmissionPage() {
   }
 
   const winProb = res.win_probability !== undefined ? res.win_probability : 0.0;
-  const isRecContest = res.routing_tier === "AUTO_CONTEST" || (!res.routing_tier && winProb >= 0.85);
-  const isRecConcede = res.routing_tier === "STANDARD_REVIEW" || res.routing_tier === "CONCEDE" || (!res.routing_tier && winProb < 0.60);
-  const isRecPriority = res.routing_tier === "PRIORITY_REVIEW" || res.routing_tier === "PRIORITY_TRIAGE" || (!res.routing_tier && winProb >= 0.60 && winProb < 0.85);
+  const isRecContest = winProb >= 0.85;
+  const isRecConcede = winProb < 0.85;
 
   const isContest = (d.analyst_action === "APPROVE" && isRecContest) || (d.analyst_action === "OVERRIDE" && d.override_strategy === "MANUAL_CONTEST");
 
@@ -2022,8 +2537,8 @@ function renderSubmissionPage() {
 
   const actionPill = document.getElementById("sub-action-pill");
   const rationaleElem = document.getElementById("sub-rationale-text");
-  const bannerTitle = document.querySelector("#ready-submit-banner .auth-title");
-  const bannerCaption = document.querySelector("#ready-submit-banner .auth-caption");
+  const bannerTitle = document.getElementById("sub-banner-title") || document.querySelector("#ready-submit-banner .auth-title");
+  const bannerCaption = document.getElementById("sub-banner-caption") || document.querySelector("#ready-submit-banner .auth-caption");
   const submitBtn = document.getElementById("btn-submit-razorpay");
 
   const stage5Title = document.getElementById("stage-05-title");
@@ -2032,6 +2547,25 @@ function renderSubmissionPage() {
   const payloadAccordionTitle = document.querySelector(".payload-accordion-header span");
   const endpointString = document.querySelector(".endpoint-string");
 
+  const modeTag = document.getElementById("sub-mode-tag");
+  const bannerModePill = document.getElementById("sub-banner-mode-pill");
+
+  if (modeTag) modeTag.innerText = rzpStatus.mode_badge;
+  if (bannerModePill) {
+    bannerModePill.innerText = rzpStatus.mode_badge;
+    if (rzpStatus.is_live) {
+      bannerModePill.className = "status-chip chip-success";
+    } else if (rzpStatus.is_test) {
+      bannerModePill.className = "status-chip";
+      bannerModePill.style.backgroundColor = "#eff6ff";
+      bannerModePill.style.color = "#1d4ed8";
+    } else {
+      bannerModePill.className = "status-chip";
+      bannerModePill.style.backgroundColor = "#f1f5f9";
+      bannerModePill.style.color = "#475569";
+    }
+  }
+
   if (d.analyst_action === "APPROVE") {
     if (isRecConcede) {
       if (stage5Title) stage5Title.innerText = "Record Liability Acceptance";
@@ -2039,7 +2573,7 @@ function renderSubmissionPage() {
       actionPill.className = "status-chip chip-danger";
       actionPill.innerText = "AUTHORIZED: CONCEDE LIABILITY";
       rationaleElem.innerHTML = `
-        Liability acceptance approved following system recommendation. Low win probability (${(winProb*100).toFixed(1)}%) indicates genuine customer claim or high risk of non-refundable ₹1,500 dispute penalty fee. Liability acceptance avoids penalty exposure.
+        Liability acceptance approved following system recommendation. Calibrated win probability (${(winProb*100).toFixed(1)}% < 85%) is below the policy threshold. Liability acceptance avoids the non-refundable ₹1,500 penalty exposure.
       `;
       if (bannerTitle) bannerTitle.innerText = "Ready to Record Liability Acceptance";
       if (bannerCaption) bannerCaption.innerText = "This action will formally accept dispute liability to avoid the ₹1,500 non-refundable dispute penalty fee and close the dispute.";
@@ -2049,40 +2583,35 @@ function renderSubmissionPage() {
         if (payloadAccordionTitle) payloadAccordionTitle.innerText = "View Internal Liability Acceptance Record (JSON)";
         if (endpointString) endpointString.innerText = `INTERNAL SETTLEMENT LEDGER • DISPUTE: ${appState.activeCaseId || d.transaction_id}`;
       }
-    } else if (isRecPriority) {
-      if (stage5Title) stage5Title.innerText = "Route to Manual Review";
-      if (stage5Sub) stage5Sub.innerText = "Review borderline risk signals and route case to senior human analysts for manual review.";
-      actionPill.className = "status-chip";
-      actionPill.innerText = "AUTHORIZED: PRIORITY TRIAGE";
-      rationaleElem.innerHTML = `
-        Priority triage approved following system recommendation. Win probability is borderline (${(winProb*100).toFixed(1)}%). 
-        Dispute is routed for manual specialist evaluation.
-      `;
-      if (bannerTitle) bannerTitle.innerText = "Ready to Route for Manual Review";
-      if (bannerCaption) bannerCaption.innerText = "This action will route the dispute to senior human analysts for specialized evidentiary review.";
-      if (submitBtn) submitBtn.innerHTML = `<span>Route to Manual Review</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
-      if (payloadCard) {
-        payloadCard.style.display = "block";
-        if (payloadAccordionTitle) payloadAccordionTitle.innerText = "View Case Routing Payload (Manual Review Queue)";
-        if (endpointString) endpointString.innerText = `QUEUE ROUTING • DISPUTE: ${appState.activeCaseId || d.transaction_id}`;
-      }
     } else {
-      if (stage5Title) stage5Title.innerText = "Prepare Razorpay CE 3.0 Submission";
+      if (stage5Title) stage5Title.innerText = "Prepare CE 3.0 Evidence Contestation";
       if (stage5Sub) stage5Sub.innerText = "Review finalized unit economics, inspect CE 3.0 evidence package, and execute automated defense.";
       actionPill.className = "status-chip chip-success";
       actionPill.innerText = "AUTHORIZED: AUTO-CONTEST (CE 3.0)";
       rationaleElem.innerHTML = `
         Dispute defense assembled under <strong>Visa Compelling Evidence 3.0</strong> and <strong>Mastercard dispute rules</strong>. 
-        Multimodal visual forensic analysis confirmed physical contradiction between claimant's statement and evidentiary imagery. 
-        Camera telemetry logs, merchant delivery confirmation, and dispute reason code verification are bound into the transmission payload.
+        Calibrated win probability (${(winProb*100).toFixed(1)}% ≥ 85%) qualifies for automated defense. 
+        Camera telemetry logs, merchant delivery confirmation, and dispute reason code verification are synthesized into the defense narrative.
       `;
-      if (bannerTitle) bannerTitle.innerText = "Ready for Transmission to Razorpay CE 3.0 API";
-      if (bannerCaption) bannerCaption.innerText = "This action will compile the CE 3.0 evidence arrays and transmit via the official Razorpay Python SDK to contest the dispute.";
-      if (submitBtn) submitBtn.innerHTML = `<span>Submit to Razorpay API</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+      
+      if (rzpStatus.is_live) {
+        if (bannerTitle) bannerTitle.innerText = "Ready for Transmission to Razorpay LIVE API";
+        if (bannerCaption) bannerCaption.innerText = "This action will compile the CE 3.0 evidence package and transmit live dispute defense to Razorpay Production API.";
+        if (submitBtn) submitBtn.innerHTML = `<span>Submit to Razorpay LIVE API</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+      } else if (rzpStatus.is_test) {
+        if (bannerTitle) bannerTitle.innerText = "Ready for Transmission to Razorpay TEST API";
+        if (bannerCaption) bannerCaption.innerText = "This action will compile the CE 3.0 evidence package and transmit to the Razorpay Test API environment.";
+        if (submitBtn) submitBtn.innerHTML = `<span>Submit to Razorpay TEST API</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+      } else {
+        if (bannerTitle) bannerTitle.innerText = "Ready for Demo Simulation Execution";
+        if (bannerCaption) bannerCaption.innerText = "This action will format and validate the CE 3.0 evidence package in local simulation mode. No external network request will be sent to Razorpay.";
+        if (submitBtn) submitBtn.innerHTML = `<span>Execute Demo Simulation</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+      }
+
       if (payloadCard) {
         payloadCard.style.display = "block";
-        if (payloadAccordionTitle) payloadAccordionTitle.innerText = "View Razorpay CE 3.0 API Payload (POST /v1/disputes/{id}/contest)";
-        if (endpointString) endpointString.innerText = `POST https://api.razorpay.com/v1/disputes/disp_${d.transaction_id.slice(-10)}/contest`;
+        if (payloadAccordionTitle) payloadAccordionTitle.innerText = "View CE 3.0 Contestation Payload";
+        if (endpointString) endpointString.innerText = rzpStatus.is_simulated ? "LOCAL DEMO SIMULATION • NOT SENT TO RAZORPAY" : `POST https://api.razorpay.com/v1/disputes/disp_${d.transaction_id.slice(-10)}/contest`;
       }
     }
   } else if (d.analyst_action === "OVERRIDE") {
@@ -2114,7 +2643,7 @@ function renderSubmissionPage() {
       Analyst Instructions: <em>"${d.evidence_note || 'Please provide signed Proof of Delivery (POD) from logistics carrier.'}"</em>.
     `;
     if (bannerTitle) bannerTitle.innerText = "Ready to Dispatch Evidence Request to Merchant Ops";
-    if (bannerCaption) bannerCaption.innerText = "This action will send a webhook notification to merchant operations requesting the specified evidentiary documentation.";
+    if (bannerCaption) bannerCaption.innerText = "This action will send a notification requesting the specified evidentiary documentation.";
     if (submitBtn) submitBtn.innerHTML = `<span>Dispatch Evidence Request</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
     if (payloadCard) {
       payloadCard.style.display = "block";
@@ -2140,23 +2669,34 @@ function renderSubmissionPage() {
       timestamp: new Date().toISOString()
     };
   } else {
-    payloadObj = res.action_details?.evidence_payload || {
-      dispute_id: `disp_${d.transaction_id.slice(-10)}`,
+    const pResult = res.perception_result || {};
+    const gpsCoord = pResult.gps_coordinates;
+    let gpsStr = "UNAVAILABLE";
+    if (gpsCoord && typeof gpsCoord === "object" && gpsCoord.latitude !== undefined) {
+      gpsStr = `${gpsCoord.latitude.toFixed(4)},${gpsCoord.longitude.toFixed(4)}`;
+    }
+    const timeStr = pResult.capture_timestamp || "UNAVAILABLE";
+    const metaMatch = pResult.metadata_match || false;
+    const vlmContradiction = pResult.vlm_contradiction_found || false;
+    const vlmRationale = (pResult.vision_reasoning || "Photographic evidence evaluated by VLM council.").slice(0, 240);
+
+    const summaryNarrative = `Automated Defense under Visa Compelling Evidence 3.0 / Mastercard Dispute Rules. Reason Code: '${d.reason_code}'. Transaction ID: '${d.transaction_id}'. Forensics: ${vlmContradiction ? 'CONTRADICTION FLAGGED - Photographic evidence refutes claim.' : 'Photographic evidence evaluated.'} VLM Analysis: ${vlmRationale}. Telemetry: EXIF GPS=${gpsStr} | Capture Time=${timeStr} | Merchant Correlation=${metaMatch}.`;
+
+    // Strictly document IDs only in arrays - never raw EXIF/VLM strings
+    payloadObj = {
+      dispute_id: appState.activeCaseId || `disp_${d.transaction_id.slice(-10)}`,
       transaction_id: d.transaction_id,
-      summary: `Automated Defense: Objective visual contradiction flagged by VLM council. Reason code '${d.reason_code}' challenged under Visa CE 3.0.`,
+      summary: summaryNarrative,
       shipping_proof: [
-        `doc_ship_${Math.random().toString(16).substring(2, 10)}`,
-        `EXIF_FORENSICS: GPS=12.9716,77.5946 | MATCH=TRUE`
+        `doc_ship_${d.transaction_id.slice(-8)}`
       ],
       billing_proof: [
-        `doc_bill_${Math.random().toString(16).substring(2, 10)}`,
-        `TX_CONFIRMATION: ID=${d.transaction_id} | AMOUNT=${d.transaction_amount}`
+        `doc_bill_${d.transaction_id.slice(-8)}`
       ],
       customer_communication: [
-        `doc_chat_${Math.random().toString(16).substring(2, 10)}`,
-        `CUSTOMER_CLAIM: '${d.claim_text}'`,
-        `VLM_FORENSIC_EVALUATION: ContradictionFlag=${res.perception_result?.vlm_contradiction_found || false}`
-      ]
+        `doc_comm_${d.transaction_id.slice(-8)}`
+      ],
+      submitted_at: new Date().toISOString()
     };
   }
 
@@ -2191,7 +2731,7 @@ async function submitToRazorpayApi() {
   const d = appState.dispute;
   const btn = document.getElementById("btn-submit-razorpay");
   btn.disabled = true;
-  btn.innerHTML = `<span>Transmitting to Razorpay CE 3.0 API...</span>`;
+  btn.innerHTML = `<span>Processing submission...</span>`;
 
   try {
     // For persistent cases, use the case-specific submit endpoint (persists submission receipt)
@@ -2201,7 +2741,10 @@ async function submitToRazorpayApi() {
         d.submission_response = persisted.submission;
         showSubmissionSuccessView(persisted.submission);
         updateCaseStatusBadges();
-        showToast("Dispute defense successfully transmitted to Razorpay CE 3.0 API.");
+        const msg = persisted.submission.mode_badge === "DEMO SIMULATION — NOT SENT TO RAZORPAY" 
+          ? "Demo simulation completed. Validated locally (not sent to Razorpay)." 
+          : "Dispute defense successfully transmitted to Razorpay.";
+        showToast(msg);
       }
       return;
     }
@@ -2228,13 +2771,16 @@ async function submitToRazorpayApi() {
 
     showSubmissionSuccessView(responseData);
     updateCaseStatusBadges();
-    showToast("Dispute defense successfully transmitted to Razorpay CE 3.0 API.");
+    const msg = responseData.mode_badge === "DEMO SIMULATION — NOT SENT TO RAZORPAY" 
+      ? "Demo simulation completed. Validated locally (not sent to Razorpay)." 
+      : "Dispute defense successfully transmitted to Razorpay.";
+    showToast(msg);
   } catch (err) {
     console.error("Submission error:", err);
     showToast("Submission failed: " + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<span>Submit to Razorpay API</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+    btn.innerHTML = `<span>Submit</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
   }
 }
 
@@ -2247,32 +2793,72 @@ function showSubmissionSuccessView(resp) {
   const subheadline = successView.querySelector(".success-subheadline");
   const isConcede = resp.status === "LIABILITY_CONCEDED" || resp.action === "CONCEDE";
   const isEvReq = resp.status === "EVIDENCE_REQUESTED" || resp.action === "REQUEST_EVIDENCE";
+  const isSimulated = resp.is_simulated || resp.mode === "DEMO_SIMULATION" || resp.status === "DEMO_SIMULATION_COMPLETED" || resp.status === "SIMULATION_FALLBACK";
+
+  const modeBadgeEl = document.getElementById("res-mode-badge");
+  const httpStatusEl = document.getElementById("res-http-status");
 
   if (isConcede) {
     if (headline) headline.innerText = "Dispute Liability Concession Recorded";
     if (subheadline) subheadline.innerText = "Liability acceptance successfully logged. Non-refundable ₹1,500 network dispute penalty fee avoided.";
+    if (modeBadgeEl) {
+      modeBadgeEl.innerText = "INTERNAL RESOLUTION (LIABILITY CONCEDED)";
+      modeBadgeEl.style.color = "var(--color-slate-ink)";
+    }
+    if (httpStatusEl) {
+      httpStatusEl.innerText = "RESOLVED (LIABILITY_CONCEDED · PENALTY_AVOIDED)";
+      httpStatusEl.className = "audit-val font-bold text-success";
+    }
   } else if (isEvReq) {
     if (headline) headline.innerText = "Additional Evidence Request Dispatched";
-    if (subheadline) subheadline.innerText = "Information request successfully recorded and dispatched to buyer portal.";
-  } else {
-    if (headline) headline.innerText = "Dispute Defense Successfully Submitted";
-    if (subheadline) subheadline.innerText = "Contest payload transmitted to Razorpay Disputes API under Visa Compelling Evidence 3.0 regulations.";
-  }
-
-  document.getElementById("res-submission-id").innerText = resp.submission_id || (isConcede ? `concede_${appState.activeCaseId}` : `sub_${Math.random().toString(16).substring(2, 14)}`);
-  document.getElementById("res-dispute-id").innerText = resp.dispute_id || resp.razorpay_dispute_id || appState.activeCaseId || `disp_${appState.dispute.transaction_id.slice(-10)}`;
-  document.getElementById("res-timestamp").innerText = resp.submitted_at || resp.timestamp || new Date().toISOString();
-  
-  const httpStatusEl = document.getElementById("res-http-status");
-  if (httpStatusEl) {
-    if (isConcede) {
-      httpStatusEl.innerText = "RESOLVED (LIABILITY_CONCEDED · PENALTY_AVOIDED)";
-    } else if (isEvReq) {
+    if (subheadline) subheadline.innerText = "Information request successfully recorded and dispatched to customer portal.";
+    if (modeBadgeEl) {
+      modeBadgeEl.innerText = "INTERNAL WORKFLOW DISPATCH";
+      modeBadgeEl.style.color = "var(--color-slate-ink)";
+    }
+    if (httpStatusEl) {
       httpStatusEl.innerText = "DISPATCHED (WAITING_FOR_CUSTOMER)";
-    } else {
-      httpStatusEl.innerText = "HTTP 200 OK (SUBMITTED_VIA_RAZORPAY_SDK)";
+      httpStatusEl.className = "audit-val font-bold";
+    }
+  } else if (isSimulated) {
+    if (headline) headline.innerText = "Demo Simulation Completed";
+    if (subheadline) subheadline.innerText = "Contest payload formatted and validated locally in Demo Simulation mode. No external network request was sent to Razorpay.";
+    if (modeBadgeEl) {
+      modeBadgeEl.innerText = "DEMO SIMULATION — NOT SENT TO RAZORPAY";
+      modeBadgeEl.style.color = "#b45309";
+    }
+    if (httpStatusEl) {
+      httpStatusEl.innerText = "SIMULATED (LOCAL VALIDATION · NOT TRANSMITTED)";
+      httpStatusEl.className = "audit-val font-bold";
+      httpStatusEl.style.color = "#b45309";
+    }
+  } else if (resp.mode === "RAZORPAY_TEST_API" || resp.status === "SUBMITTED_VIA_RAZORPAY_TEST_API") {
+    if (headline) headline.innerText = "Dispute Defense Submitted to Razorpay Test API";
+    if (subheadline) subheadline.innerText = "Contest payload transmitted to Razorpay Sandbox/Test API via official Python SDK.";
+    if (modeBadgeEl) {
+      modeBadgeEl.innerText = "RAZORPAY TEST API";
+      modeBadgeEl.style.color = "#1d4ed8";
+    }
+    if (httpStatusEl) {
+      httpStatusEl.innerText = "HTTP 200 OK (SUBMITTED_VIA_RAZORPAY_TEST_API)";
+      httpStatusEl.className = "audit-val font-bold text-success";
+    }
+  } else {
+    if (headline) headline.innerText = "Dispute Defense Submitted to Razorpay Live API";
+    if (subheadline) subheadline.innerText = "Contest payload transmitted directly to Razorpay Production API via official Python SDK.";
+    if (modeBadgeEl) {
+      modeBadgeEl.innerText = "RAZORPAY LIVE API";
+      modeBadgeEl.style.color = "#059669";
+    }
+    if (httpStatusEl) {
+      httpStatusEl.innerText = "HTTP 200 OK (SUBMITTED_VIA_RAZORPAY_LIVE_API)";
+      httpStatusEl.className = "audit-val font-bold text-success";
     }
   }
+
+  document.getElementById("res-submission-id").innerText = resp.submission_id || (isConcede ? `concede_${appState.activeCaseId}` : `sim_${Math.random().toString(16).substring(2, 14)}`);
+  document.getElementById("res-dispute-id").innerText = resp.dispute_id || resp.razorpay_dispute_id || appState.activeCaseId || `disp_${appState.dispute.transaction_id.slice(-10)}`;
+  document.getElementById("res-timestamp").innerText = resp.submitted_at || resp.timestamp || new Date().toISOString();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

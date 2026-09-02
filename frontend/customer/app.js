@@ -210,8 +210,15 @@ async function openCustomerDisputeDetail(disputeId) {
     const badge = statusBadge(d.status, hasReq);
     const bEl = document.getElementById("dtl-status-badge");
     if (bEl) {
-      bEl.textContent = badge.label;
-      bEl.className = `status-badge ${badge.cls}`;
+      if (d.customer_status) {
+        bEl.textContent = d.customer_status;
+        if (d.customer_status.includes("Action Required")) bEl.className = "status-badge badge-action-required";
+        else if (d.customer_status.includes("Resolved")) bEl.className = "status-badge badge-submitted";
+        else bEl.className = "status-badge badge-received";
+      } else {
+        bEl.textContent = badge.label;
+        bEl.className = `status-badge ${badge.cls}`;
+      }
     }
 
     const ev = d.evidence || {};
@@ -220,8 +227,34 @@ async function openCustomerDisputeDetail(disputeId) {
       imgEl.src = ev.url || "";
       imgEl.style.display = ev.url ? "block" : "none";
     }
-    setTxt("dtl-evidence-filename", ev.filename || "Evidence Photo");
+    setTxt("dtl-evidence-filename", ev.filename ? `Original: ${ev.filename}` : "Original Evidence Photo");
     setTxt("dtl-evidence-size", ev.size_bytes ? `${(ev.size_bytes/1024).toFixed(1)} KB` : "Uploaded Evidence");
+
+    // Supplementary evidence section
+    let suppContainer = document.getElementById("dtl-supp-evidence");
+    if (d.supplementary_evidence) {
+      const sEv = d.supplementary_evidence;
+      if (!suppContainer) {
+        suppContainer = document.createElement("div");
+        suppContainer.id = "dtl-supp-evidence";
+        suppContainer.style.cssText = "margin-top:16px; padding-top:16px; border-top:1px solid var(--border);";
+        const evCont = document.getElementById("dtl-evidence-container");
+        if (evCont) evCont.appendChild(suppContainer);
+      }
+      suppContainer.style.display = "block";
+      suppContainer.innerHTML = `
+        <div style="font-size:12px; font-weight:700; color:var(--teal); text-transform:uppercase; margin-bottom:8px;">Supplementary Evidence (Uploaded in Response)</div>
+        <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+          <img src="${sEv.url || ''}" alt="Supplementary Evidence" style="max-width:240px; max-height:240px; border-radius:8px; border:1px solid var(--border); object-fit:cover;" />
+          <div>
+            <div style="font-size:13.5px; font-weight:700; color:var(--navy); margin-bottom:4px;">${sEv.filename || 'Supplementary Photo'}</div>
+            <div style="font-size:12px; color:var(--slate-light);">${sEv.size_bytes ? (sEv.size_bytes/1024).toFixed(1) + ' KB' : 'Uploaded'} · Verified attached to case</div>
+          </div>
+        </div>
+      `;
+    } else if (suppContainer) {
+      suppContainer.style.display = "none";
+    }
 
     // Action Required Card logic
     const reqCard = document.getElementById("dtl-action-required-card");

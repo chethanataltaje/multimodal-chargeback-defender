@@ -65,15 +65,19 @@ class ImageForensics:
         if not has_telemetry:
             return self._fallback_stripped_response()
 
-        logger.info(f"EXIF metadata found for {image_path}.")
+        gps_available = bool(gps_lat is not None and gps_lon is not None)
+        timestamp_available = bool(timestamp and str(timestamp).strip())
+        logger.info(f"EXIF metadata found for {image_path}. GPS={gps_available}, Timestamp={timestamp_available}")
         return {
             "metadata_available": True,
-            "metadata_match": True,
+            "gps_available": gps_available,
+            "timestamp_available": timestamp_available,
+            "metadata_match": True,  # Maintained strictly for legacy model feature input mapping
             "camera_device": camera,
             "gps_coordinates": {
                 "latitude": gps_lat,
                 "longitude": gps_lon
-            } if gps_lat is not None and gps_lon is not None else None,
+            } if gps_available else None,
             "capture_timestamp": timestamp,
             "flag": "EXIF_AVAILABLE",
             "exif_note": "EXIF metadata was present in the submitted file. Metadata presence alone does not establish image originality or authenticity."
@@ -82,6 +86,8 @@ class ImageForensics:
     def _fallback_stripped_response(self) -> dict:
         return {
             "metadata_available": False,
+            "gps_available": False,
+            "timestamp_available": False,
             "metadata_match": False,
             "camera_device": None,
             "gps_coordinates": None,

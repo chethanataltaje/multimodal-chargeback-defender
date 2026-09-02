@@ -2332,3 +2332,93 @@ html, body {
     align-items: stretch;
   }
 }
+
+/* CE 3.0 Evidentiary Checklist Status Badges */
+.badge-status-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.badge-status-check.verified {
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-status-check.unverifiable {
+  background-color: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.badge-status-check.failed {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.check-entry.check-verified span:last-child {
+  color: var(--color-indigo-navy);
+}
+
+.check-entry.check-unverifiable span:last-child {
+  color: #92400e;
+}
+
+.check-entry.check-failed span:last-child {
+  color: #991b1b;
+}
+
+.dir-positive {
+  color: #059669;
+}
+
+.dir-negative {
+  color: #dc2626;
+}
+
+.dir-neutral {
+  color: #475569;
+}
+
+/* Distinct Impact Direction Badges */
+.impact-dir-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.impact-dir-badge.dir-badge-positive {
+  color: #059669;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.impact-dir-badge.dir-badge-negative {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.impact-dir-badge.dir-badge-neutral {
+  color: #475569;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+}
+
+

@@ -1,20 +1,65 @@
 {
   "DIS_DEMO_001": {
+    "source": "DEMO MERCHANT RECORD",
     "delivery_timestamp": "2023-08-01T10:30:00",
     "delivery_latitude": 12.9716,
     "delivery_longitude": 77.5946,
-    "location_label": "Demo Store A (synthetic)"
+    "location_label": "Demo Store A (Bengaluru Delivery Hub - Synthetic)"
+  },
+  "DIS-DEMO-001": {
+    "source": "DEMO MERCHANT RECORD",
+    "delivery_timestamp": "2023-08-01T10:30:00",
+    "delivery_latitude": 12.9716,
+    "delivery_longitude": 77.5946,
+    "location_label": "Demo Store A (Bengaluru Delivery Hub - Synthetic)"
+  },
+  "pay_demo_friendly_001": {
+    "source": "DEMO MERCHANT RECORD",
+    "delivery_timestamp": "2023-08-01T10:30:00",
+    "delivery_latitude": 12.9716,
+    "delivery_longitude": 77.5946,
+    "location_label": "Demo Store A (Bengaluru Delivery Hub - Synthetic)"
   },
   "DIS_DEMO_002": {
+    "source": "DEMO MERCHANT RECORD",
     "delivery_timestamp": "2023-08-02T14:45:00",
     "delivery_latitude": 37.7749,
     "delivery_longitude": -122.4194,
-    "location_label": "Demo Store B (synthetic)"
+    "location_label": "Demo Store B (San Francisco Dispatch - Synthetic)"
+  },
+  "DIS-DEMO-002": {
+    "source": "DEMO MERCHANT RECORD",
+    "delivery_timestamp": "2023-08-02T14:45:00",
+    "delivery_latitude": 37.7749,
+    "delivery_longitude": -122.4194,
+    "location_label": "Demo Store B (San Francisco Dispatch - Synthetic)"
+  },
+  "pay_demo_damage_002": {
+    "source": "DEMO MERCHANT RECORD",
+    "delivery_timestamp": "2023-08-02T14:45:00",
+    "delivery_latitude": 37.7749,
+    "delivery_longitude": -122.4194,
+    "location_label": "Demo Store B (San Francisco Dispatch - Synthetic)"
   },
   "DIS_DEMO_003": {
+    "source": "DEMO MERCHANT RECORD",
     "delivery_timestamp": "2023-08-03T09:15:00",
     "delivery_latitude": 51.5074,
     "delivery_longitude": -0.1278,
-    "location_label": "Demo Store C (synthetic)"
+    "location_label": "Demo Store C (London Hub - Synthetic)"
+  },
+  "DIS-DEMO-003": {
+    "source": "DEMO MERCHANT RECORD",
+    "delivery_timestamp": "2023-08-03T09:15:00",
+    "delivery_latitude": 51.5074,
+    "delivery_longitude": -0.1278,
+    "location_label": "Demo Store C (London Hub - Synthetic)"
+  },
+  "pay_demo_borderline_003": {
+    "source": "DEMO MERCHANT RECORD",
+    "delivery_timestamp": "2023-08-03T09:15:00",
+    "delivery_latitude": 51.5074,
+    "delivery_longitude": -0.1278,
+    "location_label": "Demo Store C (London Hub - Synthetic)"
   }
 }
