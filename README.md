@@ -4,7 +4,6 @@
 
 ### Automated Defense, Backed by Proof — Not Persuasion
 
-**Razorpay Buildathon 2026 · Track 02: AI Risk Manager**
 
 *Autonomous Multimodal Dispute Forensics & Razorpay CE 3.0 Automation*
 
@@ -334,8 +333,6 @@ Under Visa CE 3.0 / Razorpay dispute specifications:
 
 ---
 
-<div align="center">
 
-Built for **Razorpay Buildathon 2026** · Track 02: AI Risk Manager
 
 </div>
