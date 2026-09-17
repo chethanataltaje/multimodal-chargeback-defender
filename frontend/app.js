@@ -2611,7 +2611,7 @@ async function renderSubmissionPage() {
       if (payloadCard) {
         payloadCard.style.display = "block";
         if (payloadAccordionTitle) payloadAccordionTitle.innerText = "View CE 3.0 Contestation Payload";
-        if (endpointString) endpointString.innerText = rzpStatus.is_simulated ? "LOCAL DEMO SIMULATION • NOT SENT TO RAZORPAY" : `POST https://api.razorpay.com/v1/disputes/disp_${d.transaction_id.slice(-10)}/contest`;
+        if (endpointString) endpointString.innerText = rzpStatus.is_simulated ? "LOCAL DEMO SIMULATION • NOT SENT TO RAZORPAY" : `PATCH https://api.razorpay.com/v1/disputes/disp_${d.transaction_id.slice(-10)}/contest`;
       }
     }
   } else if (d.analyst_action === "OVERRIDE") {

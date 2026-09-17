@@ -410,7 +410,7 @@ async def submit_dispute_contest(req: SubmitContestRequest):
         "override_reason": req.override_reason,
         "submission_id": submission_res.get("submission_id", f"sim_{uuid.uuid4().hex[:12]}"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "api_endpoint": f"POST https://api.razorpay.com/v1/disputes/{dispute_id}/contest" if not is_sim else "LOCAL_SIMULATION_ONLY",
+        "api_endpoint": f"PATCH https://api.razorpay.com/v1/disputes/{dispute_id}/contest" if not is_sim else "LOCAL_SIMULATION_ONLY",
         "regulatory_framework": "Visa Compelling Evidence 3.0 / Mastercard Dispute Rules",
         "details": submission_res,
         "message": submission_res.get("message", f"Contestation processed in {mode_badge} mode.")
@@ -1078,7 +1078,7 @@ async def submit_dispute(dispute_id: str):
         "razorpay_dispute_id": razorpay_dispute_id,
         "submission_id": submission_res.get("submission_id", f"sim_{uuid.uuid4().hex[:12]}"),
         "action": review.get("action"),
-        "api_endpoint": f"POST https://api.razorpay.com/v1/disputes/{razorpay_dispute_id}/contest" if not is_sim else "LOCAL_SIMULATION_ONLY",
+        "api_endpoint": f"PATCH https://api.razorpay.com/v1/disputes/{razorpay_dispute_id}/contest" if not is_sim else "LOCAL_SIMULATION_ONLY",
         "regulatory_framework": "Visa Compelling Evidence 3.0 / Mastercard Dispute Rules",
         "evidence_payload": evidence_payload,
         "razorpay_response": submission_res,

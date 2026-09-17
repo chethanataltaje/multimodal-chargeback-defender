@@ -60,9 +60,9 @@ Most approaches either build user-facing chatbots that try to talk customers out
 
 1. **Multimodal Perception Council**: Cross-references customer claim statements against uploaded photos via **Google Gemini** (e.g., `gemini-3.5-flash-lite`, `gemini-3.6-flash`) with automated **Groq Vision Failover** (e.g., `qwen/qwen3.6-27b`) to detect visual contradictions, and extracts real camera EXIF metadata (capture timestamp, GPS coordinates, camera model).
 2. **Telemetry Correlation**: Compares evidence coordinates and capture time against authoritative merchant logistics records (`merchant_refs.json`) to detect geofence/temporal mismatches.
-3. **Statistical Gatekeeper**: Gates automated actions behind a calibrated `CatBoostClassifier` (held-out test ROC-AUC `0.9433`, Brier Score `0.0641`) with SHAP TreeExplainer feature attributions.
+3. **Statistical Gatekeeper**: Gates automated actions behind a calibrated `CatBoostClassifier` (held-out synthetic benchmark ROC-AUC `0.9433`, Brier Score `0.0641`) with SHAP TreeExplainer feature attributions.
 4. **Dynamic Operational Resolution**:
-   - **Win Probability ≥ 85% (`AUTO_CONTEST`)**: Compiles rigid Visa CE 3.0 evidence arrays and transmits to Razorpay Disputes API (`POST /v1/disputes/{id}/contest`).
+   - **Win Probability ≥ 85% (`AUTO_CONTEST`)**: Compiles rigid Visa CE 3.0 evidence arrays and transmits to Razorpay Disputes API (`PATCH /v1/disputes/{id}/contest`).
    - **Win Probability < 85% (`CONCEDE LIABILITY`)**: Formally records liability acceptance to protect merchant capital from the non-refundable ₹1,500 card network penalty fee.
 5. **Analyst Decision Station with Confirmation Modal**: Human-in-the-loop review station with a formal audit modal before committing determinations to the case ledger.
 6. **Forensically Honest PDF Audit Receipt**: Generates downloadable, court-ready PDF audit reports on demand via `ReportLab` directly from backend case records.
@@ -266,20 +266,24 @@ multimodal-chargeback-defender/
 
 ## Model Evaluation & Held-Out Test Methodology
 
-To ensure scientific honesty and reproducibility for **Razorpay Buildathon Track 02 (AI Risk Manager)**, the statistical gatekeeper is evaluated using a strictly **quarantined held-out test set** that was never touched during model fitting, hyperparameter tuning, calibration, or threshold selection.
+To ensure scientific honesty and reproducibility for **Razorpay Buildathon Track 02 (AI Risk Manager)**, the statistical gatekeeper is evaluated using a strictly **quarantined held-out synthetic test set** (5,000 samples) that was never touched during model fitting, hyperparameter tuning, calibration, or threshold selection.
+
+> [!NOTE]
+> **Synthetic Benchmark Disclosure**:
+> Under RBI privacy regulations and payment scheme guidelines, proprietary cardholder logs and raw banking records cannot be published. The model is trained and validated on a mathematically modeled 25,000-sample synthetic dataset. **All quantitative metrics below represent offline held-out synthetic benchmark evaluations and must not be interpreted as live production performance statistics.**
 
 ### 1. Dataset & Partitioning
-- **Dataset**: `data/synthetic_chargeback_data.csv` (25,000 samples). *Banking Disclosure: Real merchant dispute records and cardholder transaction logs are strictly confidential under RBI privacy regulations. We mathematically simulated 25,000 records modeling realistic fraud vectors, account tenure distributions, and multimodal perception signals.*
+- **Dataset**: `data/synthetic_chargeback_data.csv` (25,000 synthetic samples). *Banking Disclosure: Real merchant dispute records and cardholder transaction logs are strictly confidential under RBI privacy regulations. We mathematically simulated 25,000 records modeling realistic fraud vectors, account tenure distributions, and multimodal perception signals.*
 - **Held-Out Split**: 80% Train (20,000 rows) / 20% Held-Out Test (5,000 rows) using stratified sampling (`stratify=y`) with fixed seed (`random_state=42`).
 - **Internal Validation**: An 80/20 split inside the 20,000 training portion (16,000 fit / 4,000 val) was used for CatBoost iteration monitoring and threshold sensitivity curves.
 - **Zero Leakage**: 0 transaction IDs overlap between train and test sets (`data/held_out_test_ids.json`).
 
-### 2. Held-Out Evaluation Metrics (Business Threshold: 85.0%)
-Evaluated on the 5,000 quarantined test samples:
+### 2. Held-Out Evaluation Metrics (Synthetic Benchmark @ 85.0% Threshold)
+Evaluated on the 5,000 quarantined synthetic test samples:
 
-| Metric | Held-Out Value | Context / Interpretation |
+| Metric | Synthetic Benchmark Value | Context / Interpretation |
 |---|---|---|
-| **ROC-AUC Score** | **0.9433** | Discriminative ranking capability across fraud vectors |
+| **ROC-AUC Score** | **0.9433** | Discriminative ranking capability across simulated fraud vectors |
 | **Brier Score Loss** | **0.0641** | Calibration quality (<0.10 indicates well-calibrated probabilities) |
 | **Precision (Win Rate @ 85%)** | **71.16%** | Realized win rate when contesting disputes flagged by policy |
 | **Recall (@ 85% Threshold)** | **83.02%** | Proportion of legitimately winnable merchant disputes contested |
@@ -315,8 +319,8 @@ The system interfaces with Razorpay's Dispute Management system using the offici
 | Mode | Trigger Condition | Status Code / Badge | Description |
 |---|---|---|---|
 | **`DEMO SIMULATION — NOT SENT TO RAZORPAY`** | Default when no API keys are present | `DEMO_SIMULATION_COMPLETED` (`sim_*` ID) | Validates CE 3.0 schemas and compiles evidence payload locally without making external network calls. Never returns fake success. |
-| **`RAZORPAY TEST API`** | `RAZORPAY_KEY_ID=rzp_test_*` configured | `SUBMITTED_VIA_RAZORPAY_TEST_API` | Transmits contestation to Razorpay's sandbox/test environment via official SDK. |
-| **`RAZORPAY LIVE API`** | `RAZORPAY_KEY_ID=rzp_live_*` configured | `SUBMITTED_VIA_RAZORPAY_LIVE_API` | Transmits binding dispute defense to Razorpay Production via official SDK. |
+| **`RAZORPAY TEST API`** | `RAZORPAY_KEY_ID=rzp_test_*` configured | `SUBMITTED_VIA_RAZORPAY_TEST_API` | Transmits contestation to Razorpay's sandbox/test environment via official SDK (`PATCH /v1/disputes/{id}/contest`). |
+| **`RAZORPAY LIVE API`** | `RAZORPAY_KEY_ID=rzp_live_*` configured | `SUBMITTED_VIA_RAZORPAY_LIVE_API` | Transmits binding dispute defense to Razorpay Production via official SDK (`PATCH /v1/disputes/{id}/contest`). |
 
 ### Document ID Integrity Rule
 Under Visa CE 3.0 / Razorpay dispute specifications:
@@ -327,12 +331,8 @@ Under Visa CE 3.0 / Razorpay dispute specifications:
 
 ## Limitations & Disclosures
 
-- **Synthetic Baseline Distribution**: The CatBoost model is trained on a synthetic dataset of 25,000 mathematically correlated dispute transactions due to the confidentiality of proprietary cardholder data. All reported metrics reflect this synthetic distribution and must not be confused with live production performance.
+- **Synthetic Baseline Distribution & Benchmark Nature**: The CatBoost model is trained on a synthetic dataset of 25,000 mathematically correlated dispute transactions due to the strict confidentiality of proprietary cardholder and merchant banking data. All reported metrics reflect this synthetic benchmark distribution and are presented strictly as experimental validation results rather than live production operational performance.
 - **EXIF Stripping by Social Platforms**: Images uploaded through social channels (WhatsApp, screenshots) frequently lack EXIF metadata. The system flags this explicitly as an unverified signal rather than assuming tampering.
 - **Defense-Only Scope**: The system never communicates unprompted messages or applies persuasive pressure to the cardholder; it operates strictly as an internal decision engine and API integration layer.
 
 ---
-
-
-
-</div>

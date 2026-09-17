@@ -20,11 +20,158 @@
     "size_bytes": 8329
   },
   "supplementary_evidence": null,
-  "status": "evidence_received",
-  "analysis": null,
-  "risk": null,
-  "review": null,
-  "submission": null,
+  "status": "submitted",
+  "analysis": {
+    "analysis_status": "ANALYZED",
+    "vlm_available": true,
+    "vlm_contradiction_found": true,
+    "claim_supported": false,
+    "physical_damage_visible": false,
+    "vision_confidence_score": 0.95,
+    "insufficient_evidence": false,
+    "vision_reasoning": "The image displays a phone screen with text explicitly stating 'SCREEN IS INTACT NO CRACKS OR DAMAGE,' which directly contradicts the customer's claim that the screen arrived shattered.",
+    "operational_error": null,
+    "provider": "groq",
+    "model": "qwen/qwen3.6-27b",
+    "fallback_used": true,
+    "metadata_available": false,
+    "metadata_match": false,
+    "gps_available": false,
+    "merchant_gps_available": true,
+    "timestamp_available": false,
+    "merchant_timestamp_available": true,
+    "camera_device": null,
+    "gps_coordinates": null,
+    "capture_timestamp": null,
+    "exif_note": "EXIF metadata presence alone does not establish image originality or authenticity.",
+    "gps_correlation": "NOT_VERIFIABLE",
+    "gps_distance_meters": null,
+    "gps_match_tolerance_meters": 500,
+    "timestamp_correlation": "NOT_VERIFIABLE",
+    "timestamp_difference_minutes": null,
+    "timestamp_tolerance_minutes": 120,
+    "merchant_reference": {
+      "source": "DEMO MERCHANT RECORD",
+      "delivery_timestamp": "2023-08-01T10:30:00",
+      "delivery_latitude": 12.9716,
+      "delivery_longitude": 77.5946,
+      "location_label": "Demo Store A (Bengaluru Delivery Hub - Synthetic)"
+    }
+  },
+  "risk": {
+    "win_probability": 0.9741348071712932,
+    "top_drivers": [
+      {
+        "feature": "vlm_contradiction_found",
+        "impact": 4.095257818845449
+      },
+      {
+        "feature": "reason_code",
+        "impact": 1.0498680060257353
+      },
+      {
+        "feature": "prior_chargeback_count",
+        "impact": 0.8187423204893981
+      }
+    ],
+    "routing_tier": "AUTO_CONTEST",
+    "final_action": "DEMO_SIMULATION_COMPLETED",
+    "action_details": {
+      "evidence_payload": {
+        "summary": "Automated Defense under Visa Compelling Evidence 3.0 / Mastercard Dispute Rules. Transaction ID: pay_demo_friendly_001 | Order ID: order_ndly_001 | Reason: 'damaged___defective_goods'. Claim: 'The phone screen arrived completely shattered in pieces and unusable.'. Forensics: CONTRADICTION DETECTED: Photographic evidence directly refutes claimant statement. VLM Analysis: The image displays a phone screen with text explicitly stating 'SCREEN IS INTACT NO CRACKS OR DAMAGE,' which directly contradicts the customer's claim that the screen arrived shattered.. Telemetry: EXIF GPS=UNAVAILABLE | Capture Time=None | Merchant Correlation=False.",
+        "shipping_proof": [
+          "doc_ship_a6b663fe"
+        ],
+        "billing_proof": [
+          "doc_bill_6a464a78"
+        ],
+        "customer_communication": [
+          "doc_comm_13e88cde"
+        ],
+        "submitted_at": "2026-09-04T17:06:24.359362+00:00Z"
+      },
+      "api_response": {
+        "status": "DEMO_SIMULATION_COMPLETED",
+        "is_simulated": true,
+        "mode": "DEMO_SIMULATION",
+        "mode_badge": "DEMO SIMULATION — NOT SENT TO RAZORPAY",
+        "http_code": 200,
+        "dispute_id": "disp_iendly_001",
+        "submission_id": "sim_f9b770456510",
+        "mapped_evidence": {
+          "summary": "Automated Defense under Visa Compelling Evidence 3.0 / Mastercard Dispute Rules. Transaction ID: pay_demo_friendly_001 | Order ID: order_ndly_001 | Reason: 'damaged___defective_goods'. Claim: 'The phone screen arrived completely shattered in pieces and unusable.'. Forensics: CONTRADICTION DETECTED: Photographic evidence directly refutes claimant statement. VLM Analysis: The image displays a phone screen with text explicitly stating 'SCREEN IS INTACT NO CRACKS OR DAMAGE,' which directly contradicts the customer's claim that the screen arrived shattered.. Telemetry: EXIF GPS=UNAVAILABLE | Capture Time=None | Merchant Correlation=False.",
+          "shipping_proof": [
+            "doc_ship_a6b663fe"
+          ],
+          "billing_proof": [
+            "doc_bill_6a464a78"
+          ],
+          "customer_communication": [
+            "doc_comm_13e88cde"
+          ],
+          "submitted_at": "2026-09-04T17:06:24.359362+00:00Z"
+        },
+        "message": "Demo simulation mode: Contest payload formatted and validated locally. No API call sent to Razorpay."
+      }
+    }
+  },
+  "review": {
+    "action": "APPROVE",
+    "override_strategy": null,
+    "override_reason": null,
+    "evidence_type": null,
+    "evidence_note": null,
+    "analyst_name": "Chethana A.",
+    "reviewed_at": "2026-09-04T17:07:44.492466+00:00"
+  },
+  "submission": {
+    "status": "DEMO_SIMULATION_COMPLETED",
+    "is_simulated": true,
+    "mode": "DEMO_SIMULATION",
+    "mode_badge": "DEMO SIMULATION — NOT SENT TO RAZORPAY",
+    "razorpay_dispute_id": "disp_iendly_001",
+    "submission_id": "sim_4cd931f64032",
+    "action": "APPROVE",
+    "api_endpoint": "LOCAL_SIMULATION_ONLY",
+    "regulatory_framework": "Visa Compelling Evidence 3.0 / Mastercard Dispute Rules",
+    "evidence_payload": {
+      "summary": "Automated Defense under Visa Compelling Evidence 3.0 / Mastercard Dispute Rules. Transaction ID: pay_demo_friendly_001 | Order ID: order_ndly_001 | Reason: 'Damaged / Defective Goods'. Claim: 'The phone screen arrived completely shattered in pieces and unusable.'. Forensics: CONTRADICTION DETECTED: Photographic evidence directly refutes claimant statement. VLM Analysis: The image displays a phone screen with text explicitly stating 'SCREEN IS INTACT NO CRACKS OR DAMAGE,' which directly contradicts the customer's claim that the screen arrived shattered.. Telemetry: EXIF GPS=UNAVAILABLE | Capture Time=None | Merchant Correlation=False.",
+      "shipping_proof": [
+        "doc_ship_abee78ae"
+      ],
+      "billing_proof": [
+        "doc_bill_ab07f0c6"
+      ],
+      "customer_communication": [
+        "doc_comm_cf71a80d"
+      ],
+      "submitted_at": "2026-09-04T17:07:50.325576+00:00Z"
+    },
+    "razorpay_response": {
+      "status": "DEMO_SIMULATION_COMPLETED",
+      "is_simulated": true,
+      "mode": "DEMO_SIMULATION",
+      "mode_badge": "DEMO SIMULATION — NOT SENT TO RAZORPAY",
+      "http_code": 200,
+      "dispute_id": "disp_iendly_001",
+      "submission_id": "sim_4cd931f64032",
+      "mapped_evidence": {
+        "summary": "Automated Defense under Visa Compelling Evidence 3.0 / Mastercard Dispute Rules. Transaction ID: pay_demo_friendly_001 | Order ID: order_ndly_001 | Reason: 'Damaged / Defective Goods'. Claim: 'The phone screen arrived completely shattered in pieces and unusable.'. Forensics: CONTRADICTION DETECTED: Photographic evidence directly refutes claimant statement. VLM Analysis: The image displays a phone screen with text explicitly stating 'SCREEN IS INTACT NO CRACKS OR DAMAGE,' which directly contradicts the customer's claim that the screen arrived shattered.. Telemetry: EXIF GPS=UNAVAILABLE | Capture Time=None | Merchant Correlation=False.",
+        "shipping_proof": [
+          "doc_ship_abee78ae"
+        ],
+        "billing_proof": [
+          "doc_bill_ab07f0c6"
+        ],
+        "customer_communication": [
+          "doc_comm_cf71a80d"
+        ],
+        "submitted_at": "2026-09-04T17:07:50.325576+00:00Z"
+      },
+      "message": "Demo simulation mode: Contest payload formatted and validated locally. No API call sent to Razorpay."
+    },
+    "submitted_at": "2026-09-04T17:07:50.325939+00:00"
+  },
   "audit_trail": [
     {
       "event": "case_created",
@@ -33,8 +180,32 @@
     {
       "event": "evidence_received",
       "timestamp": "2026-08-30T05:01:00+00:00"
+    },
+    {
+      "event": "analysis_started",
+      "timestamp": "2026-09-04T17:06:02.383601+00:00"
+    },
+    {
+      "event": "analysis_completed",
+      "timestamp": "2026-09-04T17:06:24.361835+00:00",
+      "routing_tier": "AUTO_CONTEST",
+      "win_probability": 0.9741348071712932
+    },
+    {
+      "event": "analyst_approved",
+      "timestamp": "2026-09-04T17:07:44.495012+00:00",
+      "analyst": "Chethana A."
+    },
+    {
+      "event": "submission_started",
+      "timestamp": "2026-09-04T17:07:50.325127+00:00"
+    },
+    {
+      "event": "submission_completed",
+      "timestamp": "2026-09-04T17:07:50.326778+00:00",
+      "submission_id": "sim_4cd931f64032"
     }
   ],
-  "created_at": "2026-09-02T06:58:10.349428+00:00",
-  "updated_at": "2026-09-02T06:58:10.349428+00:00"
+  "created_at": "2026-09-04T17:05:55.185651+00:00",
+  "updated_at": "2026-09-04T17:07:50.326784+00:00"
 }

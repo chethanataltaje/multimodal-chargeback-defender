@@ -20,9 +20,81 @@
     "size_bytes": 3354
   },
   "supplementary_evidence": null,
-  "status": "evidence_received",
-  "analysis": null,
-  "risk": null,
+  "status": "analysis_complete",
+  "analysis": {
+    "analysis_status": "ANALYZED",
+    "vlm_available": true,
+    "vlm_contradiction_found": false,
+    "claim_supported": false,
+    "physical_damage_visible": false,
+    "vision_confidence_score": 1.0,
+    "insufficient_evidence": true,
+    "vision_reasoning": "The submitted image is entirely dark and explicitly labeled as extremely blurry/dark, preventing any visual assessment of the merchandise.",
+    "operational_error": null,
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "fallback_used": false,
+    "metadata_available": false,
+    "metadata_match": false,
+    "gps_available": false,
+    "merchant_gps_available": true,
+    "timestamp_available": false,
+    "merchant_timestamp_available": true,
+    "camera_device": null,
+    "gps_coordinates": null,
+    "capture_timestamp": null,
+    "exif_note": "EXIF metadata presence alone does not establish image originality or authenticity.",
+    "gps_correlation": "NOT_VERIFIABLE",
+    "gps_distance_meters": null,
+    "gps_match_tolerance_meters": 500,
+    "timestamp_correlation": "NOT_VERIFIABLE",
+    "timestamp_difference_minutes": null,
+    "timestamp_tolerance_minutes": 120,
+    "merchant_reference": {
+      "source": "DEMO MERCHANT RECORD",
+      "delivery_timestamp": "2023-08-03T09:15:00",
+      "delivery_latitude": 51.5074,
+      "delivery_longitude": -0.1278,
+      "location_label": "Demo Store C (London Hub - Synthetic)"
+    }
+  },
+  "risk": {
+    "win_probability": 0.020687503429592,
+    "top_drivers": [
+      {
+        "feature": "metadata_match",
+        "impact": -1.4437343272386278
+      },
+      {
+        "feature": "vlm_contradiction_found",
+        "impact": -1.4077009143970156
+      },
+      {
+        "feature": "reason_code",
+        "impact": 0.6254794587567118
+      }
+    ],
+    "routing_tier": "STANDARD_REVIEW",
+    "final_action": "RECOMMEND_LIABILITY_ACCEPTANCE",
+    "action_details": {
+      "recommendation": "Accept Dispute Liability",
+      "reason": "Win probability < 85%. Contesting carries high risk of non-refundable ₹1,500 dispute penalty fee.",
+      "top_drivers": [
+        {
+          "feature": "metadata_match",
+          "impact": -1.4437343272386278
+        },
+        {
+          "feature": "vlm_contradiction_found",
+          "impact": -1.4077009143970156
+        },
+        {
+          "feature": "reason_code",
+          "impact": 0.6254794587567118
+        }
+      ]
+    }
+  },
   "review": null,
   "submission": null,
   "audit_trail": [
@@ -33,8 +105,18 @@
     {
       "event": "evidence_received",
       "timestamp": "2026-08-29T23:01:00+00:00"
+    },
+    {
+      "event": "analysis_started",
+      "timestamp": "2026-09-04T17:13:26.116169+00:00"
+    },
+    {
+      "event": "analysis_completed",
+      "timestamp": "2026-09-04T17:14:06.699886+00:00",
+      "routing_tier": "STANDARD_REVIEW",
+      "win_probability": 0.020687503429592
     }
   ],
-  "created_at": "2026-09-02T06:58:10.357414+00:00",
-  "updated_at": "2026-09-02T06:58:10.357414+00:00"
+  "created_at": "2026-09-04T17:05:55.187304+00:00",
+  "updated_at": "2026-09-04T17:14:06.699893+00:00"
 }
